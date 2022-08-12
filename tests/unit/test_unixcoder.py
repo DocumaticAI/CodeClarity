@@ -12,6 +12,9 @@ sys.path.insert(
 )
 from unixcoder import UniXCoderEmbedder
 
+def test():
+    pass
+
 def test_embedding():
     embedder = UniXCoderEmbedder(base_model = "microsoft/unixcoder-base")
     embedder.encode(code_batch = "foo")

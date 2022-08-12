@@ -167,10 +167,11 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         code_token_ids = self.tokenize(
             string_batch, max_length=max_length_tokenizer, mode="<encoder-only>"
         )
-        code_source_ids = torch.tensor(code_token_ids).to(self.device)
-        inference_embeddings = (
-            model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
-        )
+        with torch.no_grad():
+            code_source_ids = torch.tensor(code_token_ids).to(self.device)
+            inference_embeddings = (
+                model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
+            )
         if isinstance(string_batch, str):
             print(
                 f"inference_logged- batch_size:{1}, language:{language}, request_type:{embedding_type}, inference_time:{time.time()-start:.4f}, average_inference_time:{((time.time()-start)):.4f}"
@@ -217,10 +218,11 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             code_token_ids = self.tokenize(
                 minibatch, max_length=max_length_tokenizer, mode="<encoder-only>"
             )
-            code_source_ids = torch.tensor(code_token_ids).to(self.device)
-            code_embeddings_list.append(
-                model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
-            )
+            with torch.no_grad():
+                code_source_ids = torch.tensor(code_token_ids).to(self.device)
+                code_embeddings_list.append(
+                    model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
+                )
             del code_source_ids
             torch.cuda.empty_cache()
 
@@ -231,7 +233,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         return inference_embeddings
 
     def encode(
-        self, code_batch: Union[list, str], query_batch: Union[list, str], language: str
+        self, code_batch: Union[list, str], query_batch: Union[list, str], language: str, batch_size : int = 32
     ) -> dict:
         """
         Wrapping function for making inference on batches of source code or queries to embed them.
@@ -252,7 +254,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         if code_batch:
             if (
                 isinstance(code_batch, list)
-                and len(code_batch) > self.serving_batch_size
+                and len(code_batch) > batch_size
             ):
                 code_embeddings = self.make_inference_batch(
                     string_batch=code_batch,

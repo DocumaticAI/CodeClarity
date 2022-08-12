@@ -43,9 +43,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
 
     def __init__(self, base_model : str):
         super(UniXCoderEmbedder, self).__init__()
-        self.config_path = Path(__file__).parent / "config.yaml"
-        self.model_args = yaml.safe_load(self.config_path.read_text())
-
         assert base_model in list(self.model_args['UniXCoder']['allowed_base_models'].keys()), \
             f"UniXCoder embedding model must be in \
             {list(self.model_args['UniXCoder']['allowed_base_models'].keys())}, got {base_model}"

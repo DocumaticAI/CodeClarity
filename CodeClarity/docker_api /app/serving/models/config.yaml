@@ -7,3 +7,14 @@ UniXCoder:
   serving : 
     batch_size : 32 
     max_length : 512
+
+
+CodeBert:
+  allowed_base_models: 
+    microsoft/codebert-base : ["java", "ruby", "python", "php", "javascript", "go"] 
+    documatic/codebert-python-finetuned : ["python"]
+  
+  serving: 
+    batch_size : 32
+    max_length : 512
+    

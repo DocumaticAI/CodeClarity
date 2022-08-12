@@ -19,10 +19,12 @@ class AbstractTransformerEncoder(ABC):
     partof the public embeddings API. 
     ''' 
     allowed_languages : List[str]
-    
+
     def __init__(self) -> None:
         super().__init__()
         self.device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
+        self.config_path = Path(__file__).parent / "config.yaml"
+        self.model_args = yaml.safe_load(self.config_path.read_text())
 
 
     @abstractmethod

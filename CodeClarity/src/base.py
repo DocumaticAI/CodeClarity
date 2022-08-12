@@ -26,6 +26,9 @@ class AbstractTransformerEncoder(ABC):
         self.config_path = Path(__file__).parent / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
 
+    @abstractmethod
+    def tokenize(self):
+        pass 
 
     @abstractmethod
     def load_model(self): 
@@ -34,3 +37,26 @@ class AbstractTransformerEncoder(ABC):
     @abstractmethod
     def encode(self):
         pass 
+
+    @staticmethod
+    def split_list_equal_chunks(list_object, split_length):
+        """Yield successive n-sized chunks from lst."""
+        for i in range(0, len(list_object), split_length):
+            yield list_object[i : i + split_length]
+
+    @staticmethod
+    def change_embedding_dtype(embedding : torch.Tensor, return_type : str): 
+        '''
+        Define the return dtype for the embedding
+        '''
+        allowed_return_types = ["np", "tensor", "list"]
+        assert return_type in allowed_return_types, \
+            f"Error, return type {return_type} provided. If overriding \
+            return type, please specify an option from {allowed_return_types}"
+        
+        if return_type == "tensor": 
+            return [tensor for tensor in embedding.cpu().detach()]
+        elif return_type == "np": 
+            return [tensor for tensor in embedding.cpu().detach().numpy()]
+        elif return_type == "list": 
+            return [tensor for tensor in embedding.cpu().detach().tolist()]

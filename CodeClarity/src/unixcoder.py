@@ -59,34 +59,79 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self.allowed_languages = self.model_args['UniXCoder']['allowed_base_models'][self.base_model]
         self.model = self.load_model()
 
-    @staticmethod
-    def split_list_equal_chunks(list_object, split_length):
-        """Yield successive n-sized chunks from lst."""
-        for i in range(0, len(list_object), split_length):
-            yield list_object[i : i + split_length]
-
-    def load_model(self):
+    def encode(
+        self, 
+        code_batch: Union[list, str], 
+        query_batch: Union[list, str], 
+        language: Optional[str], 
+        batch_size : Optional[int] = 32, 
+        max_length_tokenizer_nl : Optional[int] = 128, 
+        max_length_tokenizer_pl : Optional[int] = 256,
+        return_tensors : Optional[str] = "np"
+    ) -> dict:
         """
-        Abstract loader for loading models from disk into embedding models for each language
-        Arguments
-        ---------
-        model_language (str):
-            a programming language for which to do search. Currently, each language has its own model
-        Returns
-        -------
-        model_to_load (BaseEncoder):
-            an instance of a wrapped roberta model that has been finetuned on the codesearchnet corpus
+        Wrapping function for making inference on batches of source code or queries to embed them.
+        Takes in a single or batch example for code and queries along with a programming language to specify the
+        language model to use, and returns a list of lists which corresponds to embeddings for each item in
+        the batch.
+        Parameters
+        ----------
+        code_batch - Union[list, str]:
+            either a list or single example of a source code snippit to be embedded
+        query_batch - Union[list, str]:
+            either a list or single example of a query to be embedded to perform search
+        language - str:
+            a programming language that is required to specify the embedding model to use (each language that
+            has been finetuned on has it's own model currently)
         """
-        start = time.time()
-        model = UniXEncoderBase(base_model = self.base_model)
-        model_to_load = model.module if hasattr(model, "module") else model
+        if code_batch:
+            if (
+                isinstance(code_batch, list)
+                and len(code_batch) > batch_size
+            ):
+                code_embeddings = self.make_inference_batch(
+                    string_batch=code_batch,
+                    max_length_tokenizer=max_length_tokenizer_pl,
+                    embedding_type="code",
+                )
+            else:
+                code_embeddings = self.make_inference_minibatch(
+                    string_batch=code_batch,
+                    max_length_tokenizer=max_length_tokenizer_pl,
+                    embedding_type="code",
+                )
+        else:
+            code_embeddings = None
 
-        print(
-            "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
-                self.allowed_languages, self.device, time.time() - start
-            )
-        )
-        return model_to_load.to(self.device)
+        if query_batch:
+            if (
+                isinstance(query_batch, list)
+                and len(query_batch) > self.serving_batch_size
+            ):
+                query_embeddings = self.make_inference_batch(
+                    string_batch=query_batch,
+                    max_length_tokenizer=max_length_tokenizer_nl,
+                    embedding_type="query",
+                )
+            else:
+                query_embeddings = self.make_inference_minibatch(
+                    string_batch=query_batch,
+                    max_length_tokenizer=max_length_tokenizer_nl,
+                    embedding_type="query",
+                )
+        else:
+            query_embeddings = None
+
+        return {
+            "code_batch": {
+                "code_strings": code_batch,
+                "code_embeddings": code_embeddings,
+            },
+            "query_batch": {
+                "query_strings": query_batch,
+                "query_embeddings": query_embeddings,
+            },
+        }
 
     def tokenize(
         self,
@@ -143,7 +188,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        language: str,
         embedding_type: str,
     ) -> list:
         """
@@ -161,7 +205,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         embedding_type - str:
             logging parameter to display the task for embedding, query or code.
         """
-        start = time.time()
         model = self.model
 
         code_token_ids = self.tokenize(
@@ -170,15 +213,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         with torch.no_grad():
             code_source_ids = torch.tensor(code_token_ids).to(self.device)
             inference_embeddings = (
-                model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
-            )
-        if isinstance(string_batch, str):
-            print(
-                f"inference_logged- batch_size:{1}, language:{language}, request_type:{embedding_type}, inference_time:{time.time()-start:.4f}, average_inference_time:{((time.time()-start)):.4f}"
-            )
-        elif isinstance(string_batch, list):
-            print(
-                f"inference_logged-  batch_size:{len(string_batch)}, language:{language}, request_type:{embedding_type}, inference_time:{time.time()-start:.4f}, average_inference_time:{((time.time()-start)/len(string_batch)):.4f}"
+                self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), embedding_type)
             )
 
         return inference_embeddings
@@ -187,7 +222,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        language: str,
         embedding_type: str,
     ) -> list:
         """
@@ -205,7 +239,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         embedding_type - str:
             logging parameter to display the task for embedding, query or code.
         """
-        start = time.time()
         model = self.model
         code_embeddings_list = []
 
@@ -221,86 +254,35 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             with torch.no_grad():
                 code_source_ids = torch.tensor(code_token_ids).to(self.device)
                 code_embeddings_list.append(
-                    model.forward(code_inputs=code_source_ids).cpu().detach().tolist()
+                    self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), embedding_type)
                 )
             del code_source_ids
             torch.cuda.empty_cache()
 
         inference_embeddings = [x for xs in code_embeddings_list for x in xs]
-        print(
-            f"inference_logged- batch_size:{len(string_batch)}, language:{language}, request_type:{embedding_type}, inference_time:{time.time()-start:.4f}, average_inference_time:{((time.time()-start)/len(string_batch)):.4f}"
-        )
         return inference_embeddings
 
-    def encode(
-        self, code_batch: Union[list, str], query_batch: Union[list, str], language: str, batch_size : int = 32
-    ) -> dict:
+    def load_model(self):
         """
-        Wrapping function for making inference on batches of source code or queries to embed them.
-        Takes in a single or batch example for code and queries along with a programming language to specify the
-        language model to use, and returns a list of lists which corresponds to embeddings for each item in
-        the batch.
-        Parameters
-        ----------
-        code_batch - Union[list, str]:
-            either a list or single example of a source code snippit to be embedded
-        query_batch - Union[list, str]:
-            either a list or single example of a query to be embedded to perform search
-        language - str:
-            a programming language that is required to specify the embedding model to use (each language that
-            has been finetuned on has it's own model currently)
+        Abstract loader for loading models from disk into embedding models for each language
+        Arguments
+        ---------
+        model_language (str):
+            a programming language for which to do search. Currently, each language has its own model
+        Returns
+        -------
+        model_to_load (BaseEncoder):
+            an instance of a wrapped roberta model that has been finetuned on the codesearchnet corpus
         """
-        # Make embeddings for batches of code in request body
-        if code_batch:
-            if (
-                isinstance(code_batch, list)
-                and len(code_batch) > batch_size
-            ):
-                code_embeddings = self.make_inference_batch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=256,
-                    language=language,
-                    embedding_type="code",
-                )
-            else:
-                code_embeddings = self.make_inference_minibatch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=256,
-                    language=language,
-                    embedding_type="code",
-                )
-        else:
-            code_embeddings = None
+        start = time.time()
+        model = UniXEncoderBase(base_model = self.base_model)
+        model_to_load = model.module if hasattr(model, "module") else model
 
-        # Make embeddings for batches of queries in request body
-        if query_batch:
-            if (
-                isinstance(query_batch, list)
-                and len(query_batch) > self.serving_batch_size
-            ):
-                query_embeddings = self.make_inference_batch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=128,
-                    language=language,
-                    embedding_type="query",
-                )
-            else:
-                query_embeddings = self.make_inference_minibatch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=128,
-                    language=language,
-                    embedding_type="query",
-                )
-        else:
-            query_embeddings = None
+        print(
+            "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
+                self.allowed_languages, self.device, time.time() - start
+            )
+        )
+        return model_to_load.to(self.device)
 
-        return {
-            "code_batch": {
-                "code_strings": code_batch,
-                "code_embeddings": code_embeddings,
-            },
-            "query_batch": {
-                "query_strings": query_batch,
-                "query_embeddings": query_embeddings,
-            },
-        }
+            

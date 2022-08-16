@@ -1,42 +1,20 @@
-import os
-import time
-from abc import abstractmethod
-from pathlib import Path
-from posixpath import split
-from typing import Any, Dict, List, Optional, Union
+import subprocess as sp 
+import torch 
+import numpy as np 
+ 
 
-import torch
-import torch.nn as nn
-import uvicorn
-import yaml
-from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
-from abc import abstractmethod, ABC
-
-
-class AbstractTransformerEncoder(ABC): 
+class UtilityHandler(object):
     '''
-    class for the inheritance definitions for all of the encoders that will be usable as 
-    partof the public embeddings API. 
-    ''' 
-    allowed_languages : List[str]
+    '''
+    def __init__(self):
+        self.single_device_memory = self.check_host_gpu_ram
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
-        self.config_path = Path(__file__).parent / "config.yaml"
-        self.model_args = yaml.safe_load(self.config_path.read_text())
+    @staticmethod
+    def check_host_gpu_ram():
+        command = "nvidia-smi --query-gpu=memory.free --format=csv"
+        memory_free_info = sp.check_output(command.split()).decode('ascii').split('\n')[:-1][1:]
+        return int(memory_free_info[0].strip("MiB ")) / 1000
 
-    @abstractmethod
-    def tokenize(self):
-        pass 
-
-    @abstractmethod
-    def load_model(self): 
-        pass 
-
-    @abstractmethod
-    def encode(self):
-        pass 
 
     @staticmethod
     def split_list_equal_chunks(list_object, split_length):
@@ -60,3 +38,4 @@ class AbstractTransformerEncoder(ABC):
             return [tensor for tensor in embedding.cpu().detach().numpy()]
         elif return_type == "list": 
             return [tensor for tensor in embedding.cpu().detach().tolist()]
+

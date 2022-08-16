@@ -1,4 +1,5 @@
 UniXCoder:
+  base_tokenizer : "microsoft/unixcoder-base"
   allowed_base_models: 
     microsoft/unixcoder-base : ["java", "ruby", "python", "php", "javascript", "go"] 
     microsoft/unixcoder-base-unimodal : ["java", "ruby", "python", "php", "javascript", "go"]
@@ -8,6 +9,7 @@ UniXCoder:
     max_length : 512
 
 CodeBert:
+  base_tokenizer : "microsoft/codebert-base"
   allowed_base_models: 
     microsoft/codebert-base : ["java", "ruby", "python", "php", "javascript", "go"] 
     documatic/codebert-python-finetuned : ["python"]

@@ -13,7 +13,7 @@ import yaml
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 from abc import abstractmethod, ABC
 
-from .base import AbstractTransformerEncoder
+from base import AbstractTransformerEncoder
 
 class UniXEncoderBase(nn.Module):
     def __init__(self, base_model : str):
@@ -48,7 +48,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             {list(self.model_args['UniXCoder']['allowed_base_models'].keys())}, got {base_model}"
         
         self.tokenizer = RobertaTokenizer.from_pretrained(
-            base_model
+            self.model_args['UniXCoder']['base_tokenizer']
         )
         self.config = RobertaConfig.from_pretrained(
             base_model
@@ -59,79 +59,6 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self.allowed_languages = self.model_args['UniXCoder']['allowed_base_models'][self.base_model]
         self.model = self.load_model()
 
-    def encode(
-        self, 
-        code_batch: Union[list, str], 
-        query_batch: Union[list, str], 
-        language: Optional[str], 
-        batch_size : Optional[int] = 32, 
-        max_length_tokenizer_nl : Optional[int] = 128, 
-        max_length_tokenizer_pl : Optional[int] = 256,
-        return_tensors : Optional[str] = "np"
-    ) -> dict:
-        """
-        Wrapping function for making inference on batches of source code or queries to embed them.
-        Takes in a single or batch example for code and queries along with a programming language to specify the
-        language model to use, and returns a list of lists which corresponds to embeddings for each item in
-        the batch.
-        Parameters
-        ----------
-        code_batch - Union[list, str]:
-            either a list or single example of a source code snippit to be embedded
-        query_batch - Union[list, str]:
-            either a list or single example of a query to be embedded to perform search
-        language - str:
-            a programming language that is required to specify the embedding model to use (each language that
-            has been finetuned on has it's own model currently)
-        """
-        if code_batch:
-            if (
-                isinstance(code_batch, list)
-                and len(code_batch) > batch_size
-            ):
-                code_embeddings = self.make_inference_batch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    embedding_type="code",
-                )
-            else:
-                code_embeddings = self.make_inference_minibatch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    embedding_type="code",
-                )
-        else:
-            code_embeddings = None
-
-        if query_batch:
-            if (
-                isinstance(query_batch, list)
-                and len(query_batch) > self.serving_batch_size
-            ):
-                query_embeddings = self.make_inference_batch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    embedding_type="query",
-                )
-            else:
-                query_embeddings = self.make_inference_minibatch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    embedding_type="query",
-                )
-        else:
-            query_embeddings = None
-
-        return {
-            "code_batch": {
-                "code_strings": code_batch,
-                "code_embeddings": code_embeddings,
-            },
-            "query_batch": {
-                "query_strings": query_batch,
-                "query_embeddings": query_embeddings,
-            },
-        }
 
     def tokenize(
         self,
@@ -188,7 +115,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        embedding_type: str,
+        return_tensors : Optional[str] = "torch"
     ) -> list:
         """
         Takes in a either a single string of a code or a query or a small batch, and returns an embedding for each input.
@@ -210,19 +137,20 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         code_token_ids = self.tokenize(
             string_batch, max_length=max_length_tokenizer, mode="<encoder-only>"
         )
+        
         with torch.no_grad():
             code_source_ids = torch.tensor(code_token_ids).to(self.device)
             inference_embeddings = (
-                self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), embedding_type)
+                self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), return_tensors)
             )
-
         return inference_embeddings
 
     def make_inference_batch(
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        embedding_type: str,
+        return_tensors : Optional[str] = "torch"
+
     ) -> list:
         """
         Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
@@ -254,7 +182,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             with torch.no_grad():
                 code_source_ids = torch.tensor(code_token_ids).to(self.device)
                 code_embeddings_list.append(
-                    self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), embedding_type)
+                    self.change_embedding_dtype(model.forward(code_inputs=code_source_ids), return_tensors)
                 )
             del code_source_ids
             torch.cuda.empty_cache()

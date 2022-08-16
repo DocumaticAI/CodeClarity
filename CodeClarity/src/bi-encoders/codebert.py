@@ -90,7 +90,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
         code_embeddings_list = []
 
         # Sort inputs by list
-        split_code_batch = self.split_list_equal_chunks(
+        split_code_batch = self.utility_handler.split_list_equal_chunks(
             string_batch, self.serving_batch_size
         )
 
@@ -112,7 +112,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
     def tokenize(self,
         inputs: Union[List[str], str],
         max_length=512,
-        padding=True,):
+        padding=True):
         '''
         '''
         if isinstance(inputs, str):

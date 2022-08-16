@@ -171,7 +171,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         code_embeddings_list = []
 
         # Sort inputs by list
-        split_code_batch = self.split_list_equal_chunks(
+        split_code_batch = self.utility_handler.split_list_equal_chunks(
             string_batch, self.serving_batch_size
         )
 

@@ -13,7 +13,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
     '''
     '''
     def __init__(self, base_model : str) -> None:
-        super().__init__()
+        super(CodeBertEmbedder, self).__init__()
         assert base_model in list(self.model_args['CodeBert']['allowed_base_models'].keys()), \
             f"UniXCoder embedding model must be in \
             {list(self.model_args['CodeBert']['allowed_base_models'].keys())}, got {base_model}"

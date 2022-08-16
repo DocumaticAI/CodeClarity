@@ -60,7 +60,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
         with torch.no_grad():
             code_source_ids = torch.tensor(code_token_ids).to(self.device)
             inference_embeddings = (
-                self.change_embedding_dtype(model.forward(code_source_ids)[1], return_type= return_tensors)
+                self.utility_handler.change_embedding_dtype(model.forward(code_source_ids)[1], return_type= return_tensors)
             )
 
         return inference_embeddings
@@ -101,7 +101,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
             with torch.no_grad():
                 code_source_ids = torch.tensor(code_token_ids).to(self.device)
                 code_embeddings_list.append(
-                    self.change_embedding_dtype(model.forward(code_source_ids)[1], return_type= return_tensors)
+                    self.utility_handler.change_embedding_dtype(model.forward(code_source_ids)[1], return_type= return_tensors)
                 )
             del code_source_ids
             torch.cuda.empty_cache()

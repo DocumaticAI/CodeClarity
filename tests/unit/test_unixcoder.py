@@ -8,6 +8,7 @@ sys.path.insert(
         Path(__file__).parents[2]
         / "CodeClarity"
         / "src"
+        /"bi-encoders"
     ),
 )
 from unixcoder import UniXCoderEmbedder

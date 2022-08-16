@@ -1,3 +1,12 @@
+CodeBert:
+  base_tokenizer : "microsoft/codebert-base"
+  allowed_base_models: 
+    microsoft/codebert-base : ["java", "ruby", "python", "php", "javascript", "go"] 
+    documatic/codebert-python-finetuned : ["python"]
+  serving: 
+    batch_size : 32
+    max_length : 512 
+
 UniXCoder:
   base_tokenizer : "microsoft/unixcoder-base"
   allowed_base_models: 
@@ -8,15 +17,6 @@ UniXCoder:
     batch_size : 32 
     max_length : 512
 
-CodeBert:
-  base_tokenizer : "microsoft/codebert-base"
-  allowed_base_models: 
-    microsoft/codebert-base : ["java", "ruby", "python", "php", "javascript", "go"] 
-    documatic/codebert-python-finetuned : ["python"]
-  serving: 
-    batch_size : 32
-    max_length : 512 
-    
 Incoder: 
   base_tokenizer : "facebook/incoder-1B"
   allowed_base_models: 
@@ -26,3 +26,15 @@ Incoder:
     batch_size : 8 
     max_length : 512 
 
+CodeT5: 
+  base_tokenizer : "Salesforce/codet5-base-multi-sum"
+  allowed_base_models: 
+    Salesforce/codet5-small : ["python", "javascript, "java", "go", "ruby", "go"]
+    Salesforce/codet5-base-multi-sum : ["python", "javascript, "java", "go", "ruby", "go"]
+    Salesforce/codet5-base : ["python", "javascript, "java", "go", "ruby", "go"]
+    Salesforce/codet5-large : ["python", "javascript, "java", "go", "ruby", "go"]
+    Salesforce/codet5-large-ntp-py : ["python"]
+    
+  serving: 
+    batch_size : 16
+    max_length : 512 

@@ -1,17 +1,9 @@
-from email.mime import base
-import os
 import time
-from abc import abstractmethod
-from pathlib import Path
-from posixpath import split
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import torch
 import torch.nn as nn
-import uvicorn
-import yaml
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
-from abc import abstractmethod, ABC
 
 from base import AbstractTransformerEncoder
 

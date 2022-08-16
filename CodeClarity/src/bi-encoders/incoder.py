@@ -1,8 +1,7 @@
-import numpy as np
-import pandas as pd 
 from typing import Union, List, Optional 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch 
+import time 
 
 from base import AbstractTransformerEncoder
 
@@ -12,7 +11,7 @@ class InCoderEmbedding(AbstractTransformerEncoder):
     def __init__(self, base_model : str) -> None:
         super(InCoderEmbedding, self).__init__()
         assert base_model in list(self.model_args['Incoder']['allowed_base_models'].keys()), \
-            f"UniXCoder embedding model must be in \
+            f"Incoder embedding model must be in \
             {list(self.model_args['Incoder']['allowed_base_models'].keys())}, got {base_model}"
 
         self.base_model = base_model
@@ -116,8 +115,9 @@ class InCoderEmbedding(AbstractTransformerEncoder):
         check on amount of VRAM, as the model will not be able to be loaded on smaller GPUS due
         to the number of parameters 
         '''
-        model_device = torch.device('cuda') if torch.device.is_available \
-            and self.utility_handler.check_host_gpu_ram > 16 else 'cpu'
+        start = time.time()
+        model_device = torch.device('cuda') if torch.cuda.is_available() \
+            and self.utility_handler.check_host_gpu_ram() > 16 else 'cpu'
 
         if model_device == torch.device('cuda') and self.base_model in ["facebook/incoder-6B"]:
             kwargs = dict(
@@ -130,6 +130,10 @@ class InCoderEmbedding(AbstractTransformerEncoder):
                 low_cpu_mem_usage=True,
             )
         model = AutoModelForCausalLM.from_pretrained(self.base_model, **kwargs).half()
+        print(
+        "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
+            self.allowed_languages, self.device, time.time() - start
+        ))
         return model.eval().to(model_device)
 
     def load_tokenizer(self):

@@ -15,16 +15,14 @@ CodeBert:
     documatic/codebert-python-finetuned : ["python"]
   serving: 
     batch_size : 32
-    max_length : 512
+    max_length : 512 
     
 Incoder: 
   base_tokenizer : "facebook/incoder-1B"
   allowed_base_models: 
-    facebook/incoder-1b : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", \
-                          "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]  
-    facebook/incoder-6b : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", \
-                          "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]
+    facebook/incoder-1B : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]  
+    facebook/incoder-6B : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]
   serving: 
     batch_size : 8 
     max_length : 512 
-    
+

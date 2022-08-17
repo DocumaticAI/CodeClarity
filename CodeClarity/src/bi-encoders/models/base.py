@@ -53,91 +53,46 @@ class AbstractTransformerEncoder(ABC):
         ):
         pass
 
-    @abstractmethod
     def make_inference_batch(
         self,
         string_batch: Union[list, str],
-        max_length_tokenizer: int,
+        max_length_tokenizer: int, 
+        batch_size : Optional[int] = 32,
         return_tensors : Optional[str] = "torch"
-        ):
-        pass
-
-    def encode(
-        self, 
-        code_batch: Union[list, str] = None, 
-        query_batch: Union[list, str] = None, 
-        language: Optional[str] = None, 
-        batch_size : Optional[int] = 32, 
-        max_length_tokenizer_nl : Optional[int] = 128, 
-        max_length_tokenizer_pl : Optional[int] = 256,
-        return_tensors : Optional[str] = "np"
-    ) -> dict:
+    ) -> list:
         """
-        Wrapping function for making inference on batches of source code or queries to embed them.
-        Takes in a single or batch example for code and queries along with a programming language to specify the
-        language model to use, and returns a list of lists which corresponds to embeddings for each item in
-        the batch.
+        Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
+        Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
+        converted to cpu and then turned to lists and returned, Most parameters are for logging.
         Parameters
         ----------
-        code_batch - Union[list, str]:
-            either a list or single example of a source code snippit to be embedded
-        query_batch - Union[list, str]:
-            either a list or single example of a query to be embedded to perform search
+        string_batch - Union[list, str]:
+            either a single example or a list of examples of a query or piece of source code to be embedded
+        max_length_tokenizer - int:
+            the max length for a snippit before it is cut short. 256 tokens for code, 128 for queries.
         language - str:
-            a programming language that is required to specify the embedding model to use (each language that
-            has been finetuned on has it's own model currently)
+            logging parameter to display the programming language being inferred upon
+        embedding_type - str:
+            logging parameter to display the task for embedding, query or code.
         """
-        if language: 
-            assert language in self.allowed_languages, \
-                f"""the programming language you've passed was not one of the 
-                languages in the training or fintuning set for this model; using 
-                this model for language {language} is likely to lead to poor performance.
-                """
-        if code_batch:
-            if (
-                isinstance(code_batch, list)
-                and len(code_batch) > batch_size
-            ):
-                code_embeddings = self.make_inference_batch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    return_tensors = return_tensors
-                )
-            else:
-                code_embeddings = self.make_inference_minibatch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    return_tensors = return_tensors
-                )
-        else:
-            code_embeddings = None
+        batch_size = self.serving_batch_size if batch_size is not None else batch_size
+        if isinstance(string_batch, str):
+            string_batch = [string_batch]
 
-        if query_batch:
-            if (
-                isinstance(query_batch, list)
-                and len(query_batch) > self.serving_batch_size
-            ):
-                query_embeddings = self.make_inference_batch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    return_tensors = return_tensors
-                )
-            else:
-                query_embeddings = self.make_inference_minibatch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    return_tensors = return_tensors
-                )
-        else:
-            query_embeddings = None
+        # Sort inputs by list
+        code_embeddings_list = []
+        split_code_batch = self.utility_handler.split_list_equal_chunks(
+            string_batch, batch_size
+        )
+        for minibatch in split_code_batch:
+            code_embeddings_list.append(
+                    self.make_inference_minibatch(
+                        string_batch= minibatch,
+                        max_length_tokenizer= max_length_tokenizer,
+                        return_tensors= return_tensors
+                    ),
+            )
+            torch.cuda.empty_cache()
 
-        return {
-            "code_batch": {
-                "code_strings": code_batch,
-                "code_embeddings": code_embeddings,
-            },
-            "query_batch": {
-                "query_strings": query_batch,
-                "query_embeddings": query_embeddings,
-            },
-        }
+        inference_embeddings = [x for xs in code_embeddings_list for x in xs]
+        return inference_embeddings[0] if len(inference_embeddings) == 0 else inference_embeddings

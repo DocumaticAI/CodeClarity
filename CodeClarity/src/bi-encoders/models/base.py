@@ -13,7 +13,8 @@ import yaml
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 from abc import abstractmethod, ABC
 import sys
-from tqdm.autonotebook import trange
+
+from tqdm import tqdm
 
 sys.path.insert(
     0,
@@ -79,6 +80,7 @@ class AbstractTransformerEncoder(ABC):
         embedding_type - str:
             logging parameter to display the task for embedding, query or code.
         """
+
         batch_size = self.serving_batch_size if batch_size is not None else batch_size
         if isinstance(string_batch, str) or not hasattr(string_batch, '__len__'):
             string_batch = [string_batch]
@@ -88,22 +90,23 @@ class AbstractTransformerEncoder(ABC):
         length_sorted_idx = np.argsort([-self.utility_handler.check_text_length(code) for code in string_batch])
         sentences_sorted = [string_batch[idx] for idx in length_sorted_idx]
 
+        # Sort inputs by list
         split_code_batch = self.utility_handler.split_list_equal_chunks(
-            string_batch, batch_size
+            sentences_sorted, self.serving_batch_size
         )
 
-        for start_index in trange(0, len(string_batch), batch_size, desc="Batches", disable= not show_tqdm_progress_bar):
-            sentence_batch = sentences_sorted[start_index:start_index+batch_size]
-            
-            code_embeddings_list.extend(
-                    self.make_inference_minibatch(
-                        string_batch= sentence_batch,
-                        max_length_tokenizer= max_length_tokenizer,
-                        return_tensors= return_tensors
-                    ),
-            )
-            torch.cuda.empty_cache()
+        with tqdm(total=len(string_batch), file=sys.stdout) as pbar:
+            for batch in split_code_batch:    
+                code_embeddings_list.extend(
+                        self.make_inference_minibatch(
+                            string_batch= batch,
+                            max_length_tokenizer= max_length_tokenizer,
+                            return_tensors= return_tensors
+                        ),
+                )
+                torch.cuda.empty_cache()
+                pbar.update(batch_size)
 
-        inference_embeddings = [code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)]
+            inference_embeddings = [code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)]
 
-        return inference_embeddings[0] if len(inference_embeddings) == 0 else inference_embeddings
+            return inference_embeddings[0] if len(inference_embeddings) == 0 else inference_embeddings

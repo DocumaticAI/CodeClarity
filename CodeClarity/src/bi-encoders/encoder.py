@@ -64,6 +64,7 @@ class CodeEmbedder(object):
             batch_size= batch_size,
             return_tensors = return_tensors
         )
+
         return {
             "code_batch": {
                 "code_strings": code_samples,
@@ -73,4 +74,4 @@ class CodeEmbedder(object):
         
 if __name__ == "__main__": 
     x = CodeEmbedder(base_model = "microsoft/codebert-base")
-    print(x.encode(code_samples= "foo"))
+    t = (x.encode(code_samples= ["foo", "fuck", "longwg"]))

@@ -1,13 +1,9 @@
-import numpy as np 
-from pathlib import Path
-import yaml     
 from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
 from typing import Union, List, Optional
 import torch 
 import time 
 
-from base import AbstractTransformerEncoder
-
+from .base import AbstractTransformerEncoder
 
 class CodeBertEmbedder(AbstractTransformerEncoder):
     '''
@@ -15,7 +11,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
     def __init__(self, base_model : str) -> None:
         super(CodeBertEmbedder, self).__init__()
         assert base_model in list(self.model_args['CodeBert']['allowed_base_models'].keys()), \
-            f"UniXCoder embedding model must be in \
+            f"CodeBert embedding model must be in \
             {list(self.model_args['CodeBert']['allowed_base_models'].keys())}, got {base_model}"
 
         self.tokenizer = RobertaTokenizer.from_pretrained(
@@ -135,6 +131,12 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
     def load_model(self):
         '''
         '''
+        start = time.time()
         model = RobertaModel.from_pretrained(self.base_model)
+        print(
+            "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
+                self.allowed_languages, self.device, time.time() - start
+            )
+        )
         return model.to(self.device)
     

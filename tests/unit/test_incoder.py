@@ -1,4 +1,3 @@
-import code
 import sys
 from pathlib import Path
 
@@ -11,14 +10,13 @@ sys.path.insert(
         /"bi-encoders"
     ),
 )
-from unixcoder import UniXCoderEmbedder
-from codebert import CodeBertEmbedder
+from incoder import InCoderEmbedding
 
 def test():
     pass
 
 def test_unixcoder_embedding():
-    embedder = UniXCoderEmbedder(base_model = "microsoft/unixcoder-base")
-    embedder.encode(code_batch = "foo")
+    embedder = InCoderEmbedding(base_model = "facebook/incoder-1B")
+    assert embedder.encode(code_batch = "foo") is not None 
 
-    return None
+    return 1

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
-from base import AbstractTransformerEncoder
+from .base import AbstractTransformerEncoder
 
 class UniXEncoderBase(nn.Module):
     def __init__(self, base_model : str):

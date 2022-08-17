@@ -3,7 +3,7 @@ from typing import Union, List, Optional
 import torch 
 import time 
 
-from base import AbstractTransformerEncoder
+from .base import AbstractTransformerEncoder
 
 class CodeBertEmbedder(AbstractTransformerEncoder):
     '''

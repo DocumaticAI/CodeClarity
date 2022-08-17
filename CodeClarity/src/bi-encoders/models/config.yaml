@@ -29,12 +29,11 @@ Incoder:
 CodeT5: 
   base_tokenizer : "Salesforce/codet5-base-multi-sum"
   allowed_base_models: 
-    Salesforce/codet5-small : ["python", "javascript, "java", "go", "ruby", "go"]
-    Salesforce/codet5-base-multi-sum : ["python", "javascript, "java", "go", "ruby", "go"]
-    Salesforce/codet5-base : ["python", "javascript, "java", "go", "ruby", "go"]
-    Salesforce/codet5-large : ["python", "javascript, "java", "go", "ruby", "go"]
+    Salesforce/codet5-small : ["python", "javascript", "java", "go", "ruby", "go"]
+    Salesforce/codet5-base-multi-sum : ["python", "javascript", "java", "go", "ruby", "go"]
+    Salesforce/codet5-base : ["python", "javascript", "java", "go", "ruby", "go"]
+    Salesforce/codet5-large : ["python", "javascript", "java", "go", "ruby", "go"]
     Salesforce/codet5-large-ntp-py : ["python"]
-    
   serving: 
     batch_size : 16
     max_length : 512 

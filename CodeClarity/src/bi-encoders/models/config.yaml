@@ -4,7 +4,7 @@ CodeBert:
     microsoft/codebert-base : ["java", "ruby", "python", "php", "javascript", "go"] 
     documatic/codebert-python-finetuned : ["python"]
   serving: 
-    batch_size : 32
+    default_batch_size : 32
     max_length : 512 
 
 UniXCoder:
@@ -14,7 +14,7 @@ UniXCoder:
     microsoft/unixcoder-base-unimodal : ["java", "ruby", "python", "php", "javascript", "go"]
     microsoft/unixcoder-base-nine : ["java", "ruby", "python", "php", "javascript", "go", "c++", "c#", "c"]
   serving : 
-    batch_size : 32 
+    default_batch_size : 32 
     max_length : 512
 
 Incoder: 
@@ -23,7 +23,7 @@ Incoder:
     facebook/incoder-1B : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]  
     facebook/incoder-6B : ["c++", "c#", "clojure", "coffee", "golang", "haskell", "objectivec", "javascript", "typescript", "java", "perl", "php", "python", "ruby", "rust", "scala", "shell", "swift", "lua"]
   serving: 
-    batch_size : 8 
+    default_batch_size : 8 
     max_length : 512 
 
 CodeT5: 
@@ -35,5 +35,5 @@ CodeT5:
     Salesforce/codet5-large : ["python", "javascript", "java", "go", "ruby", "go"]
     Salesforce/codet5-large-ntp-py : ["python"]
   serving: 
-    batch_size : 16
+    default_batch_size : 16
     max_length : 512 

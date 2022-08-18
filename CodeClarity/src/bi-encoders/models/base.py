@@ -5,6 +5,8 @@ from pathlib import Path
 from posixpath import split
 from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 import yaml
@@ -12,22 +14,23 @@ from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 from abc import abstractmethod, ABC
 import sys
 
+from tqdm import tqdm
+
 sys.path.insert(
     0,
-    str(
-        Path(__file__).parents[2]
-        / "utils"
-    ),
+    str(Path(__file__).parents[2] / "utils"),
 )
 
 from processing import UtilityHandler
 
-class AbstractTransformerEncoder(ABC): 
-    '''
-    class for the inheritance definitions for all of the encoders that will be usable as 
-    partof the public embeddings API. 
-    ''' 
-    allowed_languages : List[str]
+
+class AbstractTransformerEncoder(ABC):
+    """
+    class for the inheritance definitions for all of the encoders that will be usable as
+    partof the public embeddings API.
+    """
+
+    allowed_languages: List[str]
 
     def __init__(self) -> None:
         super().__init__()
@@ -38,106 +41,79 @@ class AbstractTransformerEncoder(ABC):
 
     @abstractmethod
     def tokenize(self):
-        pass 
+        pass
 
     @abstractmethod
-    def load_model(self): 
-        pass 
+    def load_model(self):
+        pass
 
     @abstractmethod
     def make_inference_minibatch(
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        return_tensors : Optional[str] = "torch"
-        ):
+        return_tensors: Optional[str] = "torch",
+    ):
         pass
 
-    @abstractmethod
     def make_inference_batch(
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        return_tensors : Optional[str] = "torch"
-        ):
-        pass
-
-    def encode(
-        self, 
-        code_batch: Union[list, str] = None, 
-        query_batch: Union[list, str] = None, 
-        language: Optional[str] = None, 
-        batch_size : Optional[int] = 32, 
-        max_length_tokenizer_nl : Optional[int] = 128, 
-        max_length_tokenizer_pl : Optional[int] = 256,
-        return_tensors : Optional[str] = "np"
-    ) -> dict:
+        batch_size: Optional[int] = 32,
+        show_tqdm_progress_bar: bool = None,
+        return_tensors: Optional[str] = "torch",
+    ) -> list:
         """
-        Wrapping function for making inference on batches of source code or queries to embed them.
-        Takes in a single or batch example for code and queries along with a programming language to specify the
-        language model to use, and returns a list of lists which corresponds to embeddings for each item in
-        the batch.
+        Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
+        Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
+        converted to cpu and then turned to lists and returned, Most parameters are for logging.
         Parameters
         ----------
-        code_batch - Union[list, str]:
-            either a list or single example of a source code snippit to be embedded
-        query_batch - Union[list, str]:
-            either a list or single example of a query to be embedded to perform search
+        string_batch - Union[list, str]:
+            either a single example or a list of examples of a query or piece of source code to be embedded
+        max_length_tokenizer - int:
+            the max length for a snippit before it is cut short. 256 tokens for code, 128 for queries.
         language - str:
-            a programming language that is required to specify the embedding model to use (each language that
-            has been finetuned on has it's own model currently)
+            logging parameter to display the programming language being inferred upon
+        embedding_type - str:
+            logging parameter to display the task for embedding, query or code.
         """
-        if language: 
-            assert language in self.allowed_languages, \
-                f"""the programming language you've passed was not one of the 
-                languages in the training or fintuning set for this model; using 
-                this model for language {language} is likely to lead to poor performance.
-                """
-        if code_batch:
-            if (
-                isinstance(code_batch, list)
-                and len(code_batch) > batch_size
-            ):
-                code_embeddings = self.make_inference_batch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    return_tensors = return_tensors
-                )
-            else:
-                code_embeddings = self.make_inference_minibatch(
-                    string_batch=code_batch,
-                    max_length_tokenizer=max_length_tokenizer_pl,
-                    return_tensors = return_tensors
-                )
-        else:
-            code_embeddings = None
 
-        if query_batch:
-            if (
-                isinstance(query_batch, list)
-                and len(query_batch) > self.serving_batch_size
-            ):
-                query_embeddings = self.make_inference_batch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    return_tensors = return_tensors
-                )
-            else:
-                query_embeddings = self.make_inference_minibatch(
-                    string_batch=query_batch,
-                    max_length_tokenizer=max_length_tokenizer_nl,
-                    return_tensors = return_tensors
-                )
-        else:
-            query_embeddings = None
+        batch_size = self.serving_batch_size if batch_size is not None else batch_size
+        if isinstance(string_batch, str) or not hasattr(string_batch, "__len__"):
+            string_batch = [string_batch]
 
-        return {
-            "code_batch": {
-                "code_strings": code_batch,
-                "code_embeddings": code_embeddings,
-            },
-            "query_batch": {
-                "query_strings": query_batch,
-                "query_embeddings": query_embeddings,
-            },
-        }
+        # Sort inputs by list
+        code_embeddings_list = []
+        length_sorted_idx = np.argsort(
+            [-self.utility_handler.check_text_length(code) for code in string_batch]
+        )
+        sentences_sorted = [string_batch[idx] for idx in length_sorted_idx]
+
+        # Sort inputs by list
+        split_code_batch = self.utility_handler.split_list_equal_chunks(
+            sentences_sorted, self.serving_batch_size
+        )
+
+        with tqdm(total=len(string_batch), file=sys.stdout) as pbar:
+            for batch in split_code_batch:
+                code_embeddings_list.extend(
+                    self.make_inference_minibatch(
+                        string_batch=batch,
+                        max_length_tokenizer=max_length_tokenizer,
+                        return_tensors=return_tensors,
+                    ),
+                )
+                torch.cuda.empty_cache()
+                pbar.update(batch_size)
+
+            inference_embeddings = [
+                code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
+            ]
+
+            return (
+                inference_embeddings[0]
+                if len(inference_embeddings) == 0
+                else inference_embeddings
+            )

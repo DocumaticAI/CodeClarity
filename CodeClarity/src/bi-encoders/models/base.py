@@ -5,7 +5,7 @@ from pathlib import Path
 from posixpath import split
 from typing import Any, Dict, List, Optional, Union
 
-import numpy as np 
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -18,20 +18,19 @@ from tqdm import tqdm
 
 sys.path.insert(
     0,
-    str(
-        Path(__file__).parents[2]
-        / "utils"
-    ),
+    str(Path(__file__).parents[2] / "utils"),
 )
 
 from processing import UtilityHandler
 
-class AbstractTransformerEncoder(ABC): 
-    '''
-    class for the inheritance definitions for all of the encoders that will be usable as 
-    partof the public embeddings API. 
-    ''' 
-    allowed_languages : List[str]
+
+class AbstractTransformerEncoder(ABC):
+    """
+    class for the inheritance definitions for all of the encoders that will be usable as
+    partof the public embeddings API.
+    """
+
+    allowed_languages: List[str]
 
     def __init__(self) -> None:
         super().__init__()
@@ -42,28 +41,28 @@ class AbstractTransformerEncoder(ABC):
 
     @abstractmethod
     def tokenize(self):
-        pass 
+        pass
 
     @abstractmethod
-    def load_model(self): 
-        pass 
+    def load_model(self):
+        pass
 
     @abstractmethod
     def make_inference_minibatch(
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        return_tensors : Optional[str] = "torch"
-        ):
+        return_tensors: Optional[str] = "torch",
+    ):
         pass
 
     def make_inference_batch(
         self,
         string_batch: Union[list, str],
-        max_length_tokenizer: int, 
-        batch_size : Optional[int] = 32,
-        show_tqdm_progress_bar : bool = None,
-        return_tensors : Optional[str] = "torch"
+        max_length_tokenizer: int,
+        batch_size: Optional[int] = 32,
+        show_tqdm_progress_bar: bool = None,
+        return_tensors: Optional[str] = "torch",
     ) -> list:
         """
         Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
@@ -82,12 +81,14 @@ class AbstractTransformerEncoder(ABC):
         """
 
         batch_size = self.serving_batch_size if batch_size is not None else batch_size
-        if isinstance(string_batch, str) or not hasattr(string_batch, '__len__'):
+        if isinstance(string_batch, str) or not hasattr(string_batch, "__len__"):
             string_batch = [string_batch]
 
         # Sort inputs by list
         code_embeddings_list = []
-        length_sorted_idx = np.argsort([-self.utility_handler.check_text_length(code) for code in string_batch])
+        length_sorted_idx = np.argsort(
+            [-self.utility_handler.check_text_length(code) for code in string_batch]
+        )
         sentences_sorted = [string_batch[idx] for idx in length_sorted_idx]
 
         # Sort inputs by list
@@ -96,17 +97,23 @@ class AbstractTransformerEncoder(ABC):
         )
 
         with tqdm(total=len(string_batch), file=sys.stdout) as pbar:
-            for batch in split_code_batch:    
+            for batch in split_code_batch:
                 code_embeddings_list.extend(
-                        self.make_inference_minibatch(
-                            string_batch= batch,
-                            max_length_tokenizer= max_length_tokenizer,
-                            return_tensors= return_tensors
-                        ),
+                    self.make_inference_minibatch(
+                        string_batch=batch,
+                        max_length_tokenizer=max_length_tokenizer,
+                        return_tensors=return_tensors,
+                    ),
                 )
                 torch.cuda.empty_cache()
                 pbar.update(batch_size)
 
-            inference_embeddings = [code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)]
+            inference_embeddings = [
+                code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
+            ]
 
-            return inference_embeddings[0] if len(inference_embeddings) == 0 else inference_embeddings
+            return (
+                inference_embeddings[0]
+                if len(inference_embeddings) == 0
+                else inference_embeddings
+            )

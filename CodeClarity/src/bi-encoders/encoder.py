@@ -1,40 +1,44 @@
 from email.mime import base
 import numpy as np
-import pandas as pd 
-import yaml 
+import pandas as pd
+import yaml
 from pathlib import Path
 
 from typing import Union, List, Optional
 from models import codebert, codet5, incoder, unixcoder
 
-class CodeEmbedder(object): 
-    '''
-    '''
-    def __init__(self, base_model : str):
+
+class CodeEmbedder(object):
+    """ """
+
+    def __init__(self, base_model: str):
         super(CodeEmbedder, self).__init__()
         self.embedding_models = {
-            "CodeBert" : codebert.CodeBertEmbedder,
-            "CodeT5" : codet5.CodeT5Embedder,
-            "Incoder" : incoder.InCoderEmbedder,
-            "UniXCoder" : unixcoder.UniXCoderEmbedder
+            "CodeBert": codebert.CodeBertEmbedder,
+            "CodeT5": codet5.CodeT5Embedder,
+            "Incoder": incoder.InCoderEmbedder,
+            "UniXCoder": unixcoder.UniXCoderEmbedder,
         }
         self.base_model = base_model
 
         self.config_path = Path(__file__).parent / "models" / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
 
-        self.model_type = [config for config in list(self.model_args.keys()) \
-            if base_model in list(self.model_args[config]['allowed_base_models'].keys())][0]
+        self.model_type = [
+            config
+            for config in list(self.model_args.keys())
+            if base_model in list(self.model_args[config]["allowed_base_models"].keys())
+        ][0]
 
-        self.embedder = self.embedding_models[self.model_type](base_model = base_model)
+        self.embedder = self.embedding_models[self.model_type](base_model=base_model)
 
     def encode(
-        self, 
-        code_samples : Union[str, List[str]],
-        language: Optional[str] = None, 
-        batch_size : Optional[int] = 32, 
-        max_length_tokenizer_nl : Optional[int] = 256, 
-        return_tensors : Optional[str] = "tensor"
+        self,
+        code_samples: Union[str, List[str]],
+        language: Optional[str] = None,
+        batch_size: Optional[int] = 32,
+        max_length_tokenizer_nl: Optional[int] = 256,
+        return_tensors: Optional[str] = "tensor",
     ) -> dict:
         """
         Wrapping function for making inference on batches of source code or queries to embed them.
@@ -51,18 +55,19 @@ class CodeEmbedder(object):
             a programming language that is required to specify the embedding model to use (each language that
             has been finetuned on has it's own model currently)
         """
-        if language: 
-            assert language in self.allowed_languages, \
-                f"""the programming language you've passed was not one of the 
+        if language:
+            assert (
+                language in self.allowed_languages
+            ), f"""the programming language you've passed was not one of the 
                 languages in the training or fintuning set for this model; using 
                 this model for language {language} is likely to lead to poor performance.
                 """
-                
+
         embeddings = self.embedder.make_inference_batch(
             string_batch=code_samples,
             max_length_tokenizer=max_length_tokenizer_nl,
-            batch_size= batch_size,
-            return_tensors = return_tensors
+            batch_size=batch_size,
+            return_tensors=return_tensors,
         )
 
         return {
@@ -71,7 +76,8 @@ class CodeEmbedder(object):
                 "code_embeddings": embeddings,
             },
         }
-        
-if __name__ == "__main__": 
-    x = CodeEmbedder(base_model = "microsoft/codebert-base")
-    t = (x.encode(code_samples= ["foo", "fuck", "longwg"]))
+
+
+if __name__ == "__main__":
+    x = CodeEmbedder(base_model="microsoft/codebert-base")
+    t = x.encode(code_samples=["foo", "fuck", "longwg"])

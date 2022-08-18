@@ -7,8 +7,9 @@ from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
 from .base import AbstractTransformerEncoder
 
+
 class UniXEncoderBase(nn.Module):
-    def __init__(self, base_model : str):
+    def __init__(self, base_model: str):
         super(UniXEncoderBase, self).__init__()
         self.encoder = RobertaModel.from_pretrained(base_model)
         self.tokenizer = RobertaTokenizer.from_pretrained(base_model)
@@ -29,28 +30,28 @@ class UniXEncoderBase(nn.Module):
 
 
 class UniXCoderEmbedder(AbstractTransformerEncoder):
-    """ 
-    
-    """
+    """ """
 
-    def __init__(self, base_model : str):
+    def __init__(self, base_model: str):
         super(UniXCoderEmbedder, self).__init__()
-        assert base_model in list(self.model_args['UniXCoder']['allowed_base_models'].keys()), \
-            f"UniXCoder embedding model must be in \
+        assert base_model in list(
+            self.model_args["UniXCoder"]["allowed_base_models"].keys()
+        ), f"UniXCoder embedding model must be in \
             {list(self.model_args['UniXCoder']['allowed_base_models'].keys())}, got {base_model}"
-        
+
         self.tokenizer = RobertaTokenizer.from_pretrained(
-            self.model_args['UniXCoder']['base_tokenizer']
+            self.model_args["UniXCoder"]["base_tokenizer"]
         )
-        self.config = RobertaConfig.from_pretrained(
-            base_model
-        )
+        self.config = RobertaConfig.from_pretrained(base_model)
         self.base_model = base_model
-        self.serving_batch_size = self.model_args['UniXCoder']['serving']['default_batch_size']
+        self.serving_batch_size = self.model_args["UniXCoder"]["serving"][
+            "default_batch_size"
+        ]
 
-        self.allowed_languages = self.model_args['UniXCoder']['allowed_base_models'][self.base_model]
+        self.allowed_languages = self.model_args["UniXCoder"]["allowed_base_models"][
+            self.base_model
+        ]
         self.model = self.load_model()
-
 
     def tokenize(
         self,
@@ -107,7 +108,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         self,
         string_batch: Union[list, str],
         max_length_tokenizer: int,
-        return_tensors : Optional[str] = "torch"
+        return_tensors: Optional[str] = "torch",
     ) -> list:
         """
         Takes in a either a single string of a code or a query or a small batch, and returns an embedding for each input.
@@ -129,11 +130,11 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         code_token_ids = self.tokenize(
             string_batch, max_length=max_length_tokenizer, mode="<encoder-only>"
         )
-        
+
         with torch.no_grad():
             code_source_ids = torch.tensor(code_token_ids).to(self.device)
-            inference_embeddings = (
-                self.utility_handler.change_embedding_dtype(model.forward(code_inputs=code_source_ids), return_tensors)
+            inference_embeddings = self.utility_handler.change_embedding_dtype(
+                model.forward(code_inputs=code_source_ids), return_tensors
             )
         return inference_embeddings
 
@@ -150,7 +151,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             an instance of a wrapped roberta model that has been finetuned on the codesearchnet corpus
         """
         start = time.time()
-        model = UniXEncoderBase(base_model = self.base_model)
+        model = UniXEncoderBase(base_model=self.base_model)
         model_to_load = model.module if hasattr(model, "module") else model
 
         print(
@@ -159,5 +160,3 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             )
         )
         return model_to_load.to(self.device)
-
-            

@@ -1,42 +1,56 @@
-from typing import Union, List, Optional 
+from typing import Union, List, Optional
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch 
-import time 
+import torch
+import time
 
 from .base import AbstractTransformerEncoder
 
+
 class InCoderEmbedder(AbstractTransformerEncoder):
-    '''
-    '''
-    def __init__(self, base_model : str) -> None:
+    """ """
+
+    def __init__(self, base_model: str) -> None:
         super(InCoderEmbedder, self).__init__()
-        assert base_model in list(self.model_args['Incoder']['allowed_base_models'].keys()), \
-            f"Incoder embedding model must be in \
+        assert base_model in list(
+            self.model_args["Incoder"]["allowed_base_models"].keys()
+        ), f"Incoder embedding model must be in \
             {list(self.model_args['Incoder']['allowed_base_models'].keys())}, got {base_model}"
 
         self.base_model = base_model
-        self.serving_batch_size = self.model_args['Incoder']['serving']['default_batch_size']
-        self.allowed_languages = self.model_args['Incoder']['allowed_base_models'][self.base_model]
+        self.serving_batch_size = self.model_args["Incoder"]["serving"][
+            "default_batch_size"
+        ]
+        self.allowed_languages = self.model_args["Incoder"]["allowed_base_models"][
+            self.base_model
+        ]
 
         self.model = self.load_model()
         self.tokenizer = self.load_tokenizer()
 
-    def make_inference_minibatch(self, string_batch: Union[list, str], max_length_tokenizer: int, return_tensors: Optional[str] = "torch"):
+    def make_inference_minibatch(
+        self,
+        string_batch: Union[list, str],
+        max_length_tokenizer: int,
+        return_tensors: Optional[str] = "torch",
+    ):
         model = self.model
 
         code_tokens = self.tokenize(
             string_batch, max_length=max_length_tokenizer, mode="<encoder-only>"
         )
         with torch.no_grad():
-            model_outputs = model(code_tokens.input_ids, output_hidden_states=True, return_dict=True)
+            model_outputs = model(
+                code_tokens.input_ids, output_hidden_states=True, return_dict=True
+            )
             last_hidden_state = model_outputs.hidden_states[-1]
-            
+
             weight_matrix = (
                 torch.arange(start=1, end=last_hidden_state.shape[1] + 1)
                 .unsqueeze(0)
                 .unsqueeze(-1)
                 .expand(last_hidden_state.size())
-                .float().to(last_hidden_state.device)
+                .float()
+                .to(last_hidden_state.device)
             )
             # Get attn mask of shape [bs, seq_len, hid_dim]
             input_mask_expanded = (
@@ -45,36 +59,48 @@ class InCoderEmbedder(AbstractTransformerEncoder):
                 .expand(last_hidden_state.size())
                 .float()
             )
-            sum_embeddings = torch.sum(last_hidden_state * input_mask_expanded * weight_matrix, dim=1)
+            sum_embeddings = torch.sum(
+                last_hidden_state * input_mask_expanded * weight_matrix, dim=1
+            )
             sum_mask = torch.sum(input_mask_expanded * weight_matrix, dim=1)
             embedding_batch = sum_embeddings / sum_mask
 
-        return self.utility_handler.change_embedding_dtype(embedding_batch, return_tensors)
+        return self.utility_handler.change_embedding_dtype(
+            embedding_batch, return_tensors
+        )
 
-    def tokenize(self,
-        inputs: Union[List[str], str],
-        max_length=512,
-        padding=True):
-        '''
-        '''
+    def tokenize(self, inputs: Union[List[str], str], max_length=512, padding=True):
+        """ """
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        batch_tokens = self.tokenizer(inputs, padding=padding, truncation=True, max_length = max_length, return_tensors="pt")
+        batch_tokens = self.tokenizer(
+            inputs,
+            padding=padding,
+            truncation=True,
+            max_length=max_length,
+            return_tensors="pt",
+        )
         return batch_tokens
 
     def load_model(self):
-        '''
-        class for loading incoder model with which to generate embeddings. The 
-        setting of cuda device is overridden from the base class to include a conditional 
+        """
+        class for loading incoder model with which to generate embeddings. The
+        setting of cuda device is overridden from the base class to include a conditional
         check on amount of VRAM, as the model will not be able to be loaded on smaller GPUS due
-        to the number of parameters 
-        '''
+        to the number of parameters
+        """
         start = time.time()
-        model_device = torch.device('cuda') if torch.cuda.is_available() \
-            and self.utility_handler.check_host_gpu_ram() > 16 else 'cpu'
+        model_device = (
+            torch.device("cuda")
+            if torch.cuda.is_available()
+            and self.utility_handler.check_host_gpu_ram() > 16
+            else "cpu"
+        )
 
-        if model_device == torch.device('cuda') and self.base_model in ["facebook/incoder-6B"]:
+        if model_device == torch.device("cuda") and self.base_model in [
+            "facebook/incoder-6B"
+        ]:
             kwargs = dict(
                 gitrevision="float16",
                 torch_dtype=torch.float16,
@@ -86,17 +112,17 @@ class InCoderEmbedder(AbstractTransformerEncoder):
             )
         model = AutoModelForCausalLM.from_pretrained(self.base_model, **kwargs).half()
         print(
-        "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
-            self.allowed_languages, self.device, time.time() - start
-        ))
+            "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(
+                self.allowed_languages, self.device, time.time() - start
+            )
+        )
         return model.eval().to(model_device)
 
     def load_tokenizer(self):
-        '''
-        '''
-        tokenizer = AutoTokenizer.from_pretrained(self.model_args['Incoder']['base_tokenizer'])
-        tokenizer.pad_token =  "<pad>"
+        """ """
+        tokenizer = AutoTokenizer.from_pretrained(
+            self.model_args["Incoder"]["base_tokenizer"]
+        )
+        tokenizer.pad_token = "<pad>"
         tokenizer.padding_side = "left"
         return tokenizer
-
-

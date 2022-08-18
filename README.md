@@ -30,9 +30,20 @@ cd api
 python predictor.py
 ```
 
+## <a name="help"></a>Publications
+
+The following papers are implimented or used heavily in this repo and this project would not be possible without their work:
+
+- [CodeBERT: A Pre-Trained Model for Programming and Natural Languages](https://arxiv.org/abs/2002.08155)
+- [UniXcoder: Unified Cross-Modal Pre-training for Code Representation](https://arxiv.org/abs/2203.03850) (EMNLP 2020)
+- [InCoder: A Generative Model for Code Infilling and Synthesis](https://arxiv.org/abs/2204.05999)
+- [A Conversational Paradigm for Program Synthesis](https://arxiv.org/pdf/2203.13474.pdf)
+- [ CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation ](https://github.com/salesforce/CodeT5) (EMNLP 2021)
+
+
 ## <a name="help"></a>Getting help
 
-If you have any questions about, feedback for or a problem with Weave Net:
+If you have any questions about, feedback for or a problem with Codeclarity:
 
 - Read [documatic website](https://www.documatic.com/).
 - Sign up for the [documatic Waitlist](https://documatic-website.vercel.app/waitlist).

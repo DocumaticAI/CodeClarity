@@ -14,19 +14,25 @@ class UniXEncoderBase(nn.Module):
         self.encoder = RobertaModel.from_pretrained(base_model)
         self.tokenizer = RobertaTokenizer.from_pretrained(base_model)
 
-    def forward(self, code_inputs=None, nl_inputs=None):
-        if code_inputs is not None:
-            outputs = self.encoder(code_inputs, attention_mask=code_inputs.ne(1))[0]
-            outputs = (outputs * code_inputs.ne(1)[:, :, None]).sum(1) / code_inputs.ne(
-                1
-            ).sum(-1)[:, None]
-            return torch.nn.functional.normalize(outputs, p=2, dim=1)
-        else:
-            outputs = self.encoder(nl_inputs, attention_mask=nl_inputs.ne(1))[0]
-            outputs = (outputs * nl_inputs.ne(1)[:, :, None]).sum(1) / nl_inputs.ne(
-                1
-            ).sum(-1)[:, None]
-            return torch.nn.functional.normalize(outputs, p=2, dim=1)
+    def forward(self, code_inputs : torch.tensor):
+        '''
+        forward pass of the UniXCoder model set 
+
+        Arguments
+        ---------
+        code_inputs : torch.tensor
+            either torch.tensor containing either a single or a list of tokenized
+            string inputs for which to return an embedding
+        
+        Returns 
+        -------
+        A normalized torch tensor embedding for each input fed in the forward pass
+        '''
+        outputs = self.encoder(code_inputs, attention_mask=code_inputs.ne(1))[0]
+        outputs = (outputs * code_inputs.ne(1)[:, :, None]).sum(1) / code_inputs.ne(
+            1
+        ).sum(-1)[:, None]
+        return torch.nn.functional.normalize(outputs, p=2, dim=1)
 
 
 class UniXCoderEmbedder(AbstractTransformerEncoder):
@@ -56,17 +62,22 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
     def tokenize(
         self,
         inputs: Union[List[str], str],
-        mode="<encoder-only>",
-        max_length=256,
-        padding=True,
+        mode : str="<encoder-only>",
+        max_length : int =256,
+        padding : bool=True,
     ) -> list:
         """
-        Convert string to token ids
+        Tokenize a series of 
+        
         Parameters:
-        * `inputs`- list of input strings.
-        * `max_length`- The maximum total source sequence length after tokenization.
-        * `padding`- whether to pad source sequence length to max_length.
-        * `mode`- which mode the sequence will use. i.e. <encoder-only>, <decoder-only>, <encoder-decoder>
+        inputs - Union[List[str], str]
+            list of input strings.
+        max_length - int 
+            The maximum total source sequence length after tokenization
+        padding - bool  
+            whether to pad source sequence length to max_length.
+        mode - Optional[str]
+            which mode the sequence will use. i.e. <encoder-only>, <decoder-only>, <encoder-decoder>
         """
         assert mode in ["<encoder-only>", "<decoder-only>", "<encoder-decoder>"]
 
@@ -111,19 +122,22 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         return_tensors: Optional[str] = "torch",
     ) -> list:
         """
-        Takes in a either a single string of a code or a query or a small batch, and returns an embedding for each input.
-        Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
-        converted to cpu and then turned to lists and returned, Most parameters are for logging.
-        Parameters
+        Define the forward pass of the model for a batch of inputs to get a 1 to 1 
+        embedding for every string passed. The sentence embedding is the output of RobertaModel
+        learned from pretraining and finetuning. 
+
+        Parameters 
         ----------
-        string_batch - Union[list, str]:
-            either a single example or a list of examples of a query or piece of source code to be embedded
-        max_length_tokenizer - int:
-            the max length for a snippit before it is cut short. 256 tokens for code, 128 for queries.
-        language - str:
-            logging parameter to display the programming language being inferred upon
-        embedding_type - str:
-            logging parameter to display the task for embedding, query or code.
+        string batch : Union[List[str], str]
+             a list of string inputs of code or NL to be tokenized
+
+        max_length_tokenizer : int
+            a maximum tokenization length to be passed tokenize class method. For RobertaModel,
+            can be set to at most 512.
+        
+        return_tensors : Optional[str]
+            the return format for the embeddings. Can be any of numpy, torch, tensorflow,
+            tensor, list.
         """
         model = self.model
 
@@ -140,15 +154,12 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
 
     def load_model(self):
         """
-        Abstract loader for loading models from disk into embedding models for each language
-        Arguments
-        ---------
-        model_language (str):
-            a programming language for which to do search. Currently, each language has its own model
+        Loads RobertaModel from disk for embedding generation
+
         Returns
         -------
-        model_to_load (BaseEncoder):
-            an instance of a wrapped roberta model that has been finetuned on the codesearchnet corpus
+        model_to_load - BaseEncoder:
+            an instance of a wrapped RobertaModel that has been finetuned on the codesearchnet corpus
         """
         start = time.time()
         model = UniXEncoderBase(base_model=self.base_model)

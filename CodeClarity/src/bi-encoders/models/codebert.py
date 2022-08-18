@@ -61,8 +61,22 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
             )
         return inference_embeddings
 
-    def tokenize(self, inputs: Union[List[str], str], max_length=512, padding=True):
-        """ """
+    def tokenize(self, 
+        inputs: Union[List[str], str], 
+        max_length : int=512, 
+        padding : bool=True):
+        """ 
+        Tokenize a series of input strings using a RobertaTokenizer so that 
+        they can be fed to the language model
+        
+        Parameters:
+        inputs - Union[List[str], str]
+            list of input strings.
+        max_length - int 
+            The maximum total source sequence length after tokenization
+        padding - bool  
+            whether to pad source sequence length to max_length.
+        """
         if isinstance(inputs, str):
             inputs = [inputs]
 

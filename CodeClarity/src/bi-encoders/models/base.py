@@ -26,8 +26,12 @@ from processing import UtilityHandler
 
 class AbstractTransformerEncoder(ABC):
     """
-    class for the inheritance definitions for all of the encoders that will be usable as
-    partof the public embeddings API.
+    Abstract class defining the encoding logic to be inherited for all derived classes.
+
+    All Encapsulating classes must define a method 'load_model' to specify the model,
+    and a forward pass method 'make_inference_minibatch'. Other than this, all other inference
+    logic is handled dynamically.
+    
     """
 
     allowed_languages: List[str]
@@ -41,10 +45,17 @@ class AbstractTransformerEncoder(ABC):
 
     @abstractmethod
     def tokenize(self):
+        '''
+        Abstract method defined to require all inheriting bi-encoders to tokenize strings in a flexible manner
+        '''
         pass
 
     @abstractmethod
     def load_model(self):
+        '''
+        Abstract method defined to require all inheriting bi-encoders to load a mode
+        for inference in a flexible manner
+        '''
         pass
 
     @abstractmethod
@@ -54,20 +65,11 @@ class AbstractTransformerEncoder(ABC):
         max_length_tokenizer: int,
         return_tensors: Optional[str] = "torch",
     ):
-        pass
-
-    def make_inference_batch(
-        self,
-        string_batch: Union[list, str],
-        max_length_tokenizer: int,
-        batch_size: Optional[int] = 32,
-        show_tqdm_progress_bar: bool = None,
-        return_tensors: Optional[str] = "torch",
-    ) -> list:
         """
         Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
         Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
         converted to cpu and then turned to lists and returned, Most parameters are for logging.
+        
         Parameters
         ----------
         string_batch - Union[list, str]:
@@ -78,6 +80,39 @@ class AbstractTransformerEncoder(ABC):
             logging parameter to display the programming language being inferred upon
         embedding_type - str:
             logging parameter to display the task for embedding, query or code.
+        """
+        pass
+
+    def make_inference_batch(
+        self,
+        string_batch: Union[list, str],
+        max_length_tokenizer: int,
+        batch_size: Optional[int] = 32,
+        return_tensors: Optional[str] = "torch",
+    ) -> Union[List[torch.tensor], List[np.array], List[List[int]]]:
+        """
+        Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
+        Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
+        converted to cpu and then turned to lists and returned, Most parameters are for logging.
+        
+        differs from method 'make_inference_minibatch' in that it encaptulates the forward pass logic, 
+        adding in memory management, loading bars ect..
+
+        Parameters
+        ----------
+        string_batch - Union[list, str]:
+            either a single example or a list of examples of a query or piece of source code to be embedded
+        max_length_tokenizer - int:
+            the max length for a snippit before it is cut short. 256 tokens for code, 128 for queries.
+        language - str:
+            logging parameter to display the programming language being inferred upon
+        embedding_type - str:
+            logging parameter to display the task for embedding, query or code.
+
+        Returns
+        -------
+        inference_embeddings : Union[List[torch.tensor], List[np.array], List[List[int]]]]
+            a data structure of a an embedding for every string in 'string_batch' passed into the method 
         """
 
         batch_size = self.serving_batch_size if batch_size is not None else batch_size

@@ -33,6 +33,25 @@ class InCoderEmbedder(AbstractTransformerEncoder):
         max_length_tokenizer: int,
         return_tensors: Optional[str] = "torch",
     ):
+        '''
+        Define the forward pass of the model for a batch of inputs to get a 1 to 1 
+        embedding for every string passed. Sequence embedding is a weighted average 
+        of token embeddings, as implimented in SGPT paper
+        https://arxiv.org/abs/2202.08904
+
+        Parameters 
+        ----------
+        string batch : Union[List[str], str]
+             a list of string inputs of code or NL to be tokenized
+
+        max_length_tokenizer : int
+            a maximum tokenization length to be passed tokenize class method. For XGLM,
+            can be set to at most 2048.
+        
+        return_tensors : Optional[str]
+            the return format for the embeddings. Can be any of numpy, torch, tensorflow,
+            tensor, list.
+        '''
         model = self.model
 
         code_tokens = self.tokenize(
@@ -69,8 +88,22 @@ class InCoderEmbedder(AbstractTransformerEncoder):
             embedding_batch, return_tensors
         )
 
-    def tokenize(self, inputs: Union[List[str], str], max_length=512, padding=True):
-        """ """
+    def tokenize(self, inputs: Union[List[str], str], max_length : int=512, padding : bool=True):
+        """ 
+        Take in a number of string inputs and tokenize them using the XGLM model tokenizer
+
+        Arguments
+        ---------
+        inputs : Union[List[str], str]
+             a list of string inputs of code or NL to be tokenized
+        
+        max_length : int
+            the maximum length of a sequence to be tokenized as a torch tensor. For Incoder,
+            maximum length can be set to 2048 as was the pretraining maximum.
+
+        padding : bool 
+            bool on if to pad inputs if supplied in batch.
+        """
         if isinstance(inputs, str):
             inputs = [inputs]
 
@@ -89,6 +122,12 @@ class InCoderEmbedder(AbstractTransformerEncoder):
         setting of cuda device is overridden from the base class to include a conditional
         check on amount of VRAM, as the model will not be able to be loaded on smaller GPUS due
         to the number of parameters
+
+        Returns 
+        -------
+        model - XGLMModelForCausalLM: 
+            decoder only model arch that is used for code understanding from which 
+            we sample embeddings
         """
         start = time.time()
         model_device = (

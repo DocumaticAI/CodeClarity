@@ -75,7 +75,7 @@ python predictor.py
 
 ## Pre-Trained Models
 
-We provide implimentations of a range of code embedding models that are currently the SoTA in various tasks, including code semantic search, code clustering, code program detection, synthesis and more.  Some models are general purpose models, while others produce embeddings for specific use cases. Pre-trained models can be loaded by just passing the model name: `CodeEmbedder('model_name')`.
+We provide implimentations of a range of code embedding models that are currently the state of the art in various tasks, including code semantic search, code clustering, code program detection, synthesis and more.  Some models are general purpose models, while others produce embeddings for specific use cases. Pre-trained models can be loaded by just passing the model name: `CodeEmbedder('model_name')`.
 
 ## Currently supported models
 - [CodeBERT (base model): A Pre-Trained Model for Programming and Natural Languages](https://huggingface.co/microsoft/codebert-base)
@@ -87,9 +87,9 @@ We provide implimentations of a range of code embedding models that are currentl
 - [InCoder 6B parameter model: A Generative Model for Code Infilling and Synthesis](https://huggingface.co/facebook/incoder-6B)
 
 
-# Internals 
+## Internals of docker API
 
-#CodeClarity is designed to be a simple, modular dockerized python application that can be used to optain dense vector representations of natrual language code queries, and source code jointly to empower semantic search of codebases. 
+CodeClarity is designed to be a simple, modular dockerized python application that can be used to optain dense vector representations of natrual language code queries, and source code jointly to empower semantic search of codebases. 
 
 It is comprised of a lightweight, async fastapi application running on a guicorn webserver. On startup, any of the supported models will be injected into the container, converted to an optimized serving format, and run on a REST API. 
 

@@ -54,6 +54,14 @@ class CodeEmbedder(object):
         language - str:
             a programming language that is required to specify the embedding model to use (each language that
             has been finetuned on has it's own model currently)
+
+        Returns
+        -------
+        code_batch : dict
+            input_string : List[str]
+                all strings passed into the model 
+            embeddings : List[List[float]]
+                a dense vector returned by the ML model
         """
         if language:
             assert (
@@ -71,13 +79,8 @@ class CodeEmbedder(object):
         )
 
         return {
-            "code_batch": {
-                "code_strings": code_samples,
-                "code_embeddings": embeddings,
+                "input_strings": code_samples,
+                "embeddings": embeddings,
             },
-        }
+        
 
-
-if __name__ == "__main__":
-    x = CodeEmbedder(base_model="microsoft/codebert-base")
-    t = x.encode(code_samples=["foo", "fuck", "longwg"])

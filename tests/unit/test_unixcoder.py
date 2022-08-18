@@ -26,7 +26,7 @@ def test_unixcoder_embedding(embedding_model):
     assert embedding_model.encode(code_samples = "foo") is not None 
 
 def test_embedding_list_dtype(embedding_model):
-    embeds = embedding_model.encode(code_samples = "foo", return_tensors = "list")['code_batch']['code_embeddings']
+    embeds = embedding_model.encode(code_samples = "foo", return_tensors = "list")['code_embeddings']
     assert isinstance(embeds[0], list)
 
 def test_latency_batches(embedding_model):

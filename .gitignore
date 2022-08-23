@@ -19,3 +19,6 @@ venv
 .venv
 *.pem
 *.txt
+
+!requirements.txt
+!requirements-dev.txt

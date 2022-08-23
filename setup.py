@@ -6,7 +6,7 @@ with io.open('./README.md', encoding='utf-8') as f:
 
 setup(
     name='codeclarity',
-    packages=['CodeClarity'],
+    packages=['codeclarity'],
     version='0.1',
     license='MIT',
     description='An embedding tool for all state of the art code language models',

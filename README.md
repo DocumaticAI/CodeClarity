@@ -139,4 +139,10 @@ If you have any questions about, feedback for or a problem with Codeclarity:
 - Read [documatic website](documatic).
 - Sign up for the [documatic Waitlist](https://documatic-website.vercel.app/waitlist).
 
+# License
+
+This project is ussed under the Apache 2 License.
+[Read the license](./LICENSE)
+for complete terms.
+
 [documatic]: https://www.documatic.com

@@ -1,9 +1,5 @@
 FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
 
-
-ENV model =  "foo"
-RUN echo $model
-
 RUN rm /etc/apt/sources.list.d/cuda.list
 RUN apt-key del 7fa2af80
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub

@@ -5,7 +5,8 @@ from typing import List, Optional, Union
 import numpy as np
 import pandas as pd
 import yaml
-from models import codebert, codet5, incoder, unixcoder
+
+from codeclarity.bi_encoders.models import codebert, codet5, incoder, unixcoder
 
 
 class CodeEmbedder(object):

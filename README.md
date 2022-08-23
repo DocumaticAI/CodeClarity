@@ -1,9 +1,11 @@
-# CodeClarity- Code Embeddings Made Easy
+# CodeClarity - Code Embeddings Made Easy
+
+_by [Documatic]. Sign-up for free to get a more efficient codebase in 5 minutes._
 
 # About CodeClarity
 
 This repository contains [CodeClarity] a lightweight app for creating contextual embeddings of source code in a format that is optimized and designed with code search and understanding.
-in mind. This repository is part of a larger application providing a free exploration into the documatic codesearch tools capabilities. 
+in mind. This repository is part of a larger application providing a free exploration into the documatic codesearch tools capabilities.
 
 ## Installation
 
@@ -34,7 +36,7 @@ If you want to use a GPU / CUDA, you must install PyTorch with the matching CUDA
 First download a pretrained code model.
 
 ````python
-from encoder import CodeEmbedder
+from codeclarity import CodeEmbedder
 model = CodeEmbedder(base_model = "microsoft/unixcoder-base")
 ````
 
@@ -106,16 +108,41 @@ The following papers are implimented or used heavily in this repo and this proje
 - [A Conversational Paradigm for Program Synthesis](https://arxiv.org/pdf/2203.13474.pdf)
 - [CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation](https://github.com/salesforce/CodeT5) (EMNLP 2021)
 
+# Contributing
+
+If you have a bug report,
+question,
+or feature request,
+please open an issue.
+If you'd like to contribute
+a feature
+or fix,
+feel free to open a pull request.
+Some points on coding style
+to help your PR
+get merged:
+
+- We use `black` code style
+- Sort imports with `isort` (`black` profile)
+
 
 # About Documatic
 
-[Documatic](https://www.documatic.com/) is the company that deliversa more efficient codebase in 5 minutes. While you focus on coding, Documatic handles, creates and deploys the documentation so it's always up to date.
+[Documatic] is the company that delivers a more efficient codebase in 5 minutes. While you focus on coding, Documatic handles, creates and deploys the documentation so it's always up to date.
 
 
 ## <a name="help"></a>Getting help
 
 If you have any questions about, feedback for or a problem with Codeclarity:
 
-- Read [documatic website](https://www.documatic.com/).
-- Sign up for the [documatic Waitlist](https://documatic-website.vercel.app/waitlist).
 - [File an issue or request a feature](https://github.com/DocumaticAI/Roadmap).
+- Read [documatic website](documatic).
+- Sign up for the [documatic Waitlist](https://documatic-website.vercel.app/waitlist).
+
+# License
+
+This project is ussed under the Apache 2 License.
+[Read the license](./LICENSE)
+for complete terms.
+
+[documatic]: https://www.documatic.com

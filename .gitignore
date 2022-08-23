@@ -3,6 +3,7 @@
 *json
 *parquet
 *csv
+*.egg-info/
 
 .env
 .bin
@@ -19,3 +20,6 @@ venv
 .venv
 *.pem
 *.txt
+
+!requirements.txt
+!requirements-dev.txt

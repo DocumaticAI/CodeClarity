@@ -1,11 +1,12 @@
 from email.mime import base
+from pathlib import Path
+from typing import List, Optional, Union
+
 import numpy as np
 import pandas as pd
 import yaml
-from pathlib import Path
 
-from typing import Union, List, Optional
-from models import codebert, codet5, incoder, unixcoder
+from codeclarity.bi_encoders.models import codebert, codet5, incoder, unixcoder
 
 
 class CodeEmbedder(object):
@@ -59,7 +60,7 @@ class CodeEmbedder(object):
         -------
         code_batch : dict
             input_string : List[str]
-                all strings passed into the model 
+                all strings passed into the model
             embeddings : List[List[float]]
                 a dense vector returned by the ML model
         """
@@ -78,9 +79,9 @@ class CodeEmbedder(object):
             return_tensors=return_tensors,
         )
 
-        return {
+        return (
+            {
                 "input_strings": code_samples,
                 "embeddings": embeddings,
             },
-        
-
+        )

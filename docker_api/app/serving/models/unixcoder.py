@@ -1,7 +1,7 @@
-from email.mime import base
 import os
 import time
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from email.mime import base
 from pathlib import Path
 from posixpath import split
 from typing import Any, Dict, List, Optional, Union
@@ -11,12 +11,12 @@ import torch.nn as nn
 import uvicorn
 import yaml
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
-from abc import abstractmethod, ABC
 
 from .base import AbstractTransformerEncoder
 
+
 class UniXEncoderBase(nn.Module):
-    def __init__(self, base_model : str):
+    def __init__(self, base_model: str):
         super(UniXEncoderBase, self).__init__()
         self.encoder = RobertaModel.from_pretrained(base_model)
         self.tokenizer = RobertaTokenizer.from_pretrained(base_model)
@@ -37,29 +37,26 @@ class UniXEncoderBase(nn.Module):
 
 
 class UniXCoderEmbedder(AbstractTransformerEncoder):
-    """ 
-    
-    """
+    """ """
 
-    def __init__(self, base_model : str):
+    def __init__(self, base_model: str):
         super(UniXCoderEmbedder, self).__init__()
         self.config_path = Path(__file__).parent / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
 
-        assert base_model in list(self.model_args['UniXCoder']['allowed_base_models'].keys()), \
-            f"UniXCoder embedding model must be in \
+        assert base_model in list(
+            self.model_args["UniXCoder"]["allowed_base_models"].keys()
+        ), f"UniXCoder embedding model must be in \
             {list(self.model_args['UniXCoder']['allowed_base_models'].keys())}, got {base_model}"
-        
-        self.tokenizer = RobertaTokenizer.from_pretrained(
-            base_model
-        )
-        self.config = RobertaConfig.from_pretrained(
-            base_model
-        )
-        self.base_model = base_model
-        self.serving_batch_size = self.model_args['UniXCoder']['serving']['batch_size']
 
-        self.allowed_languages = self.model_args['UniXCoder']['allowed_base_models'][self.base_model]
+        self.tokenizer = RobertaTokenizer.from_pretrained(base_model)
+        self.config = RobertaConfig.from_pretrained(base_model)
+        self.base_model = base_model
+        self.serving_batch_size = self.model_args["UniXCoder"]["serving"]["batch_size"]
+
+        self.allowed_languages = self.model_args["UniXCoder"]["allowed_base_models"][
+            self.base_model
+        ]
         self.model = self.load_model()
 
     @staticmethod
@@ -81,7 +78,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
             an instance of a wrapped roberta model that has been finetuned on the codesearchnet corpus
         """
         start = time.time()
-        model = UniXEncoderBase(base_model = self.base_model)
+        model = UniXEncoderBase(base_model=self.base_model)
         model_to_load = model.module if hasattr(model, "module") else model
 
         print(

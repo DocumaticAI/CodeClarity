@@ -36,7 +36,7 @@ If you want to use a GPU / CUDA, you must install PyTorch with the matching CUDA
 First download a pretrained code model.
 
 ````python
-from encoder import CodeEmbedder
+from codeclarity import CodeEmbedder
 model = CodeEmbedder(base_model = "microsoft/unixcoder-base")
 ````
 

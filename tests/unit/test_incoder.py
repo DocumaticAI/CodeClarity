@@ -12,7 +12,7 @@ sys.path.insert(
     0,
     str(Path(__file__).parents[2] / "CodeClarity" / "bi-encoders"),
 )
-from encoder import CodeEmbedder
+from codeclarity.bi_encoders.encoder import CodeEmbedder
 
 
 @pytest.fixture

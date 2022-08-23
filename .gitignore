@@ -3,6 +3,7 @@
 *json
 *parquet
 *csv
+*.egg-info/
 
 .env
 .bin

@@ -40,5 +40,7 @@ echo "Input the number of instances to run"
 # Read their choice
 read -p "Enter your choice [1]: " instance_num
 
+export base_model=MODEL
+
 docker build -t "codesearch_embeddings_api" .
-docker run -e MODEL_SERVER_WORKERS=instance_num -e base_model=MODEL codesearch_embeddings_api
+docker run -it codesearch_embeddings_api

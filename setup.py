@@ -1,35 +1,15 @@
-import io
+import re
 
 from setuptools import find_packages, setup
 
-with io.open("./README.md", encoding="utf-8") as f:
-    readme = f.read()
+
+def get_version():
+    result = re.search(
+        r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', open("codeclarity/__init__.py").read()
+    )
+    return result.group(1)
+
 
 setup(
-    name="codeclarity",
-    packages=["codeclarity"],
-    version="0.1",
-    license="MIT",
-    description="An embedding tool for all state of the art code language models",
-    author="Charlie Masters",
-    author_email="cm2435@bath.ac.uk",
-    url="https://github.com/DocumaticAI/CodeClarity",
-    long_description=readme,
-    long_description_content_type="text/markdown",
-    keywords=[
-        "sentence",
-        "embedding",
-        "code",
-        "search",
-        "contrastive",
-        "nlp",
-        "deep_learning",
-        "semantic",
-    ],
-    install_requires=[
-        "transformers",
-        "accelerate",
-        "tqdm",
-        "numpy",
-    ],
+    version=get_version(),
 )

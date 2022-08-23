@@ -12,7 +12,6 @@ sys.path.insert(
     str(
         Path(__file__).parents[2]
         / "CodeClarity"
-        / "src"
         /"bi-encoders"
     ),
 )

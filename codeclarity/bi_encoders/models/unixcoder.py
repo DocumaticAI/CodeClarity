@@ -14,20 +14,20 @@ class UniXEncoderBase(nn.Module):
         self.encoder = RobertaModel.from_pretrained(base_model)
         self.tokenizer = RobertaTokenizer.from_pretrained(base_model)
 
-    def forward(self, code_inputs : torch.tensor):
-        '''
-        forward pass of the UniXCoder model set 
+    def forward(self, code_inputs: torch.tensor):
+        """
+        forward pass of the UniXCoder model set
 
         Arguments
         ---------
         code_inputs : torch.tensor
             either torch.tensor containing either a single or a list of tokenized
             string inputs for which to return an embedding
-        
-        Returns 
+
+        Returns
         -------
         A normalized torch tensor embedding for each input fed in the forward pass
-        '''
+        """
         outputs = self.encoder(code_inputs, attention_mask=code_inputs.ne(1))[0]
         outputs = (outputs * code_inputs.ne(1)[:, :, None]).sum(1) / code_inputs.ne(
             1
@@ -62,19 +62,19 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
     def tokenize(
         self,
         inputs: Union[List[str], str],
-        mode : str="<encoder-only>",
-        max_length : int =256,
-        padding : bool=True,
+        mode: str = "<encoder-only>",
+        max_length: int = 256,
+        padding: bool = True,
     ) -> list:
         """
-        Tokenize a series of 
-        
+        Tokenize a series of
+
         Parameters:
         inputs - Union[List[str], str]
             list of input strings.
-        max_length - int 
+        max_length - int
             The maximum total source sequence length after tokenization
-        padding - bool  
+        padding - bool
             whether to pad source sequence length to max_length.
         mode - Optional[str]
             which mode the sequence will use. i.e. <encoder-only>, <decoder-only>, <encoder-decoder>
@@ -122,11 +122,11 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         return_tensors: Optional[str] = "torch",
     ) -> list:
         """
-        Define the forward pass of the model for a batch of inputs to get a 1 to 1 
+        Define the forward pass of the model for a batch of inputs to get a 1 to 1
         embedding for every string passed. The sentence embedding is the output of RobertaModel
-        learned from pretraining and finetuning. 
+        learned from pretraining and finetuning.
 
-        Parameters 
+        Parameters
         ----------
         string batch : Union[List[str], str]
              a list of string inputs of code or NL to be tokenized
@@ -134,7 +134,7 @@ class UniXCoderEmbedder(AbstractTransformerEncoder):
         max_length_tokenizer : int
             a maximum tokenization length to be passed tokenize class method. For RobertaModel,
             can be set to at most 512.
-        
+
         return_tensors : Optional[str]
             the return format for the embeddings. Can be any of numpy, torch, tensorflow,
             tensor, list.

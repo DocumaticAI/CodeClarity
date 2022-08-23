@@ -8,14 +8,12 @@ import json
 import os
 import time
 from typing import Optional, Union
-import os 
+
 import numpy as np
 import pandas as pd
-
 import uvicorn
 from fastapi import APIRouter, FastAPI, Response
-
-from schema import ModelSchema, GenerationResponse
+from schema import GenerationResponse, ModelSchema
 from serving.models.unixcoder import UniXCoderEmbedder
 
 app = FastAPI()
@@ -24,7 +22,8 @@ controller = APIRouter()
 preloaded_models = {}
 
 
-base_model = os.environ['base_model']
+base_model = os.environ["base_model"]
+
 
 @app.on_event("startup")
 def startup_event():
@@ -39,7 +38,7 @@ def ping():
     return Response(status_code=200)
 
 
-@controller.post("/invocations", response_model = GenerationResponse, status_code=200)
+@controller.post("/invocations", response_model=GenerationResponse, status_code=200)
 async def transformation(payload: ModelSchema):
     """
     Make an inference on a set of code or query snippits to return a set of embeddings

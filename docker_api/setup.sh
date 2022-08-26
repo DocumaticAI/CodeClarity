@@ -43,4 +43,4 @@ read -p "Enter your choice [1]: " instance_num
 export base_model=MODEL
 
 docker build -t "codesearch_embeddings_api" .
-docker run -it codesearch_embeddings_api
+#docker run -it codesearch_embeddings_api

@@ -39,6 +39,7 @@ COPY requirements.txt .
 RUN conda install pytorch cudatoolkit=11.3 -c pytorch \
     && pip install -r requirements.txt \
     && pip install transformers -U \
+    && pip install git+https://github.com/DocumaticAI/CodeClarity \
     && conda clean -ya
 
 

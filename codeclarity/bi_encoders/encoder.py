@@ -32,7 +32,8 @@ class CodeEmbedder(object):
         ][0]
 
         self.embedder = self.embedding_models[self.model_type](base_model=base_model)
-
+        self.allowed_languages = self.embedder.allowed_languages
+    
     def encode(
         self,
         code_samples: Union[str, List[str]],

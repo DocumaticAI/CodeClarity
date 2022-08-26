@@ -66,39 +66,23 @@ async def transformation(payload: ModelSchema):
         if payload.code_snippit is not None:
             code_embeddings = model.encode(
                 code_samples=payload.code_snippit,
-                query_batch=payload.query,
                 language=payload.language,
                 return_tensors="list",
             )
             print(
-                f"""response logged- num_samples:{len(payload.code_snippit)},
-                language_specified:{payload.language}, 
-                total_inference_time:{time.time() - start},
-                average_time_per_sample": {(time.time() - start) / len(payload.code_snippit)}
-                """
+                f"""response logged- num_samples:{len(payload.code_snippit)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {(time.time() - start) / len(payload.code_snippit)}"""
             )
         if payload.query is not None: 
             query_embeddings = model.encode(
                 code_samples=payload.query,
-                query_batch=payload.query,
                 return_tensors="list",
             )
             print(
-                f"""response logged- num_samples:{len(payload.query_embeddings)},
-                language_specified:{payload.language}, 
-                total_inference_time:{time.time() - start},
-                average_time_per_sample": {(time.time() - start) / len(payload.query_embeddings)}
-                """
+                f"""response logged- num_samples:{len(payload.query)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {(time.time() - start) / len(payload.query)}"""
             )
         response_body = {
-            "code_response" : {
-                "code_strings" : payload.code_snippit,
-                "code_embeddings" : code_embeddings
-            },
-            "query_response" : {
-                "query_strings" : payload.query,
-                "query_embeddings" : query_embeddings
-            }
+            "code_response" : code_embeddings,
+            "query_response" : query_embeddings
         }
         return Response(content=json.dumps(response_body), media_type="application/json")
 

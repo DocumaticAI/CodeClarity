@@ -10,12 +10,12 @@ in mind. This repository is part of a larger application providing a free explor
 ## Installation
 
 We recommend **Python 3.7** or higher, **[PyTorch 1.6.0](https://pytorch.org/get-started/locally/)** or higher and **[transformers v4.6.0](https://github.com/huggingface/transformers)** or higher. The code does **not** work with Python 2.
-**Install with pip (not currently live, coming soon.)**
+**Install with pip**
 
-Install the *codclarity* with `pip`:
+Install the *codclarity* with `pip` for nightly build versions (NOTE: this package is under constant development and the pip package is subject to regular change):
 
 ```
-pip install -U sentence-transformers
+pip install codeclarity
 ```
 
 **Install from sources**

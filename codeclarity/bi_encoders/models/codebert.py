@@ -1,7 +1,8 @@
-from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
-from typing import Union, List, Optional
-import torch
 import time
+from typing import List, Optional, Union
+
+import torch
+from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
 from .base import AbstractTransformerEncoder
 

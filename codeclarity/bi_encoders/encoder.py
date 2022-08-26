@@ -1,11 +1,12 @@
 from email.mime import base
+from pathlib import Path
+from typing import List, Optional, Union
+
 import numpy as np
 import pandas as pd
 import yaml
-from pathlib import Path
 
-from typing import Union, List, Optional
-from models import codebert, codet5, incoder, unixcoder
+from codeclarity.bi_encoders.models import codebert, codet5, incoder, unixcoder
 
 
 class CodeEmbedder(object):
@@ -32,6 +33,7 @@ class CodeEmbedder(object):
 
         self.embedder = self.embedding_models[self.model_type](base_model=base_model)
         self.allowed_languages = self.embedder.allowed_languages
+    
     def encode(
         self,
         code_samples: Union[str, List[str]],

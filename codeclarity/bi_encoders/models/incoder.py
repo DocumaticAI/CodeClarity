@@ -1,7 +1,8 @@
-from typing import Union, List, Optional
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
 import time
+from typing import List, Optional, Union
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from .base import AbstractTransformerEncoder
 

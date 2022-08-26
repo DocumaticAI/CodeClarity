@@ -1,5 +1,6 @@
 import time
-from typing import Optional, List, Union
+from typing import List, Optional, Union
+
 from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 from .base import AbstractTransformerEncoder

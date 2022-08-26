@@ -1,20 +1,17 @@
 import os
+import sys
 import time
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
 from posixpath import split
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 import yaml
-from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
-from abc import abstractmethod, ABC
-import sys
-
 from tqdm import tqdm
+from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
 sys.path.insert(
     0,

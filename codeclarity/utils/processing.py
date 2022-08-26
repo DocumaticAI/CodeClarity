@@ -1,7 +1,8 @@
 import subprocess as sp
-import torch
+from typing import List, Optional, Union
+
 import numpy as np
-from typing import Union, List, Optional
+import torch
 
 
 class UtilityHandler(object):

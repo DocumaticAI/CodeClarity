@@ -31,7 +31,7 @@ class CodeEmbedder(object):
         ][0]
 
         self.embedder = self.embedding_models[self.model_type](base_model=base_model)
-
+        self.allowed_languages = self.embedder.allowed_languages
     def encode(
         self,
         code_samples: Union[str, List[str]],
@@ -59,7 +59,7 @@ class CodeEmbedder(object):
         -------
         code_batch : dict
             input_string : List[str]
-                all strings passed into the model 
+                all strings passed into the model
             embeddings : List[List[float]]
                 a dense vector returned by the ML model
         """
@@ -78,9 +78,9 @@ class CodeEmbedder(object):
             return_tensors=return_tensors,
         )
 
-        return {
+        return (
+            {
                 "input_strings": code_samples,
                 "embeddings": embeddings,
             },
-        
-
+        )

@@ -8,15 +8,14 @@ import json
 import os
 import time
 from typing import Optional, Union
-import os 
+
 import numpy as np
 import pandas as pd
-
 import uvicorn
 from fastapi import APIRouter, FastAPI, Response
+from schema import GenerationResponse, ModelSchema
 
-from schema import ModelSchema, GenerationResponse
-from serving.models.unixcoder import UniXCoderEmbedder
+from codeclarity import CodeEmbedder
 
 app = FastAPI()
 controller = APIRouter()
@@ -24,12 +23,11 @@ controller = APIRouter()
 preloaded_models = {}
 
 
-base_model = os.environ['base_model']
-
 @app.on_event("startup")
 def startup_event():
     print("downloading wrapped class for finetuned embedding models-")
-    preloaded_models["code_search_handler"] = UniXCoderEmbedder(base_model)
+    base_model = os.environ["base_model"]
+    preloaded_models["embedding_handler"] = CodeEmbedder(base_model)
     pass
 
 
@@ -39,7 +37,7 @@ def ping():
     return Response(status_code=200)
 
 
-@controller.post("/invocations", response_model = GenerationResponse, status_code=200)
+@controller.post("/invocations", response_model=GenerationResponse, status_code=200)
 async def transformation(payload: ModelSchema):
     """
     Make an inference on a set of code or query snippits to return a set of embeddings
@@ -54,7 +52,8 @@ async def transformation(payload: ModelSchema):
     predictions : dict:
         a dictionary object with embeddings for all queries and code snippits that are parsed in the request
     """
-    model = preloaded_models["code_search_handler"]
+    start = time.time()
+    model = preloaded_models["embedding_handler"]
     if payload.language not in model.allowed_languages:
         response_msg = f"Language currently unsupported. Supported language types are {model.allowed_languages}, got {payload.language}"
         return Response(
@@ -64,12 +63,44 @@ async def transformation(payload: ModelSchema):
         )
 
     if payload.task == "embedding":
-        predictions = model.encode(
-            code_batch=payload.code_snippit,
-            query_batch=payload.query,
-            language=payload.language,
-        )
-        return Response(content=json.dumps(predictions), media_type="application/json")
+        if payload.code_snippit is not None:
+            code_embeddings = model.encode(
+                code_samples=payload.code_snippit,
+                query_batch=payload.query,
+                language=payload.language,
+                return_tensors="list",
+            )
+            print(
+                f"""response logged- num_samples:{len(payload.code_snippit)},
+                language_specified:{payload.language}, 
+                total_inference_time:{time.time() - start},
+                average_time_per_sample": {(time.time() - start) / len(payload.code_snippit)}
+                """
+            )
+        if payload.query is not None: 
+            query_embeddings = model.encode(
+                code_samples=payload.query,
+                query_batch=payload.query,
+                return_tensors="list",
+            )
+            print(
+                f"""response logged- num_samples:{len(payload.query_embeddings)},
+                language_specified:{payload.language}, 
+                total_inference_time:{time.time() - start},
+                average_time_per_sample": {(time.time() - start) / len(payload.query_embeddings)}
+                """
+            )
+        response_body = {
+            "code_response" : {
+                "code_strings" : payload.code_snippit,
+                "code_embeddings" : code_embeddings
+            },
+            "query_response" : {
+                "query_strings" : payload.query,
+                "query_embeddings" : query_embeddings
+            }
+        }
+        return Response(content=json.dumps(response_body), media_type="application/json")
 
     else:
         return Response(

@@ -31,7 +31,7 @@ class AbstractTransformerEncoder(ABC):
     All Encapsulating classes must define a method 'load_model' to specify the model,
     and a forward pass method 'make_inference_minibatch'. Other than this, all other inference
     logic is handled dynamically.
-    
+
     """
 
     allowed_languages: List[str]
@@ -45,17 +45,17 @@ class AbstractTransformerEncoder(ABC):
 
     @abstractmethod
     def tokenize(self):
-        '''
+        """
         Abstract method defined to require all inheriting bi-encoders to tokenize strings in a flexible manner
-        '''
+        """
         pass
 
     @abstractmethod
     def load_model(self):
-        '''
+        """
         Abstract method defined to require all inheriting bi-encoders to load a mode
         for inference in a flexible manner
-        '''
+        """
         pass
 
     @abstractmethod
@@ -69,7 +69,7 @@ class AbstractTransformerEncoder(ABC):
         Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
         Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
         converted to cpu and then turned to lists and returned, Most parameters are for logging.
-        
+
         Parameters
         ----------
         string_batch - Union[list, str]:
@@ -94,8 +94,8 @@ class AbstractTransformerEncoder(ABC):
         Takes in a either a single string of a code or a query or a batch of any size, and returns an embedding for each input.
         Follows standard ML embedding workflow, tokenization, token tensor passed to model, embeddings
         converted to cpu and then turned to lists and returned, Most parameters are for logging.
-        
-        differs from method 'make_inference_minibatch' in that it encaptulates the forward pass logic, 
+
+        differs from method 'make_inference_minibatch' in that it encaptulates the forward pass logic,
         adding in memory management, loading bars ect..
 
         Parameters
@@ -112,7 +112,7 @@ class AbstractTransformerEncoder(ABC):
         Returns
         -------
         inference_embeddings : Union[List[torch.tensor], List[np.array], List[List[int]]]]
-            a data structure of a an embedding for every string in 'string_batch' passed into the method 
+            a data structure of a an embedding for every string in 'string_batch' passed into the method
         """
 
         batch_size = self.serving_batch_size if batch_size is not None else batch_size

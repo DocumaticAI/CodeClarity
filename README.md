@@ -60,18 +60,20 @@ for code, embedding in zip(code_snippits, code_embeddings):
 ````
 
 # API Drop in 
-This project additionally impliments a docker container that serves a python REST api with the package running in it to serve a given model. to automatically build the container with any of the supported models for code search by running the following 
+This project additionally impliments a docker container that serves a python REST api with the package running in it to serve a given model specified by the user as an environment variable. This is to allow those lacking data science backgrounds to serve models with code understanding capabilities and to give an example of how this package may be used. 
+
+To build a docker container from source, run the following 
+```
+git clone https://github.com/DocumaticAI/code-embeddings-api.git 
+cd docker_api && bash ./setup.sh
+```
+Please ensure that the ./setup.sh has suitable permissions by running chmod on the file if needed. 
+
+Equally, to run the API outside the docker container, just clone the repository, navigate to the API folder and run the API python file directly after exporting an environment variable with the base_model. Note, this directly runs a uvicorn webserver, and this is only suitable for development usecases: this should not be done in a production environment.
 
 ```
 git clone https://github.com/DocumaticAI/code-embeddings-api.git 
-cd api && bash ./setup.sh
-```
-
-Equally, to run the API outside the docker container, just clone the repository, navigate to the API folder and run the API file directly 
-```
-git clone https://github.com/DocumaticAI/code-embeddings-api.git 
-pip install -r requirements-dev.txt
-cd api
+cd docker_api/app
 python predictor.py
 ```
 
@@ -93,9 +95,9 @@ We provide implimentations of a range of code embedding models that are currentl
 
 CodeClarity is designed to be a simple, modular dockerized python application that can be used to optain dense vector representations of natrual language code queries, and source code jointly to empower semantic search of codebases. 
 
-It is comprised of a lightweight, async fastapi application running on a guicorn webserver. On startup, any of the supported models will be injected into the container, converted to an optimized serving format, and run on a REST API. 
+The docker API is comprised of a lightweight, async fastapi application running on a guicorn webserver. On startup, any of the supported models will be injected into the container, converted to an optimized serving format (coming soon!), and run on a REST API. 
 
-CodeClarity automatically handles checking for supported languages for code models, dynamic batching of both code and natrual language snippits and conversions of code models to torchscript all in an asyncronous manner! 
+CodeClarity automatically handles checking for supported languages for code models, dynamic batching of both code and natrual language snippits in an asyncronous manner along with prudent model format conversions. 
 
 
 ## <a name="help"></a>Publications

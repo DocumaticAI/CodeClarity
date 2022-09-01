@@ -15,7 +15,6 @@ class EmbeddingBatch(BaseModel):
     input_strings: Union[List[str], str]
     embeddings: List[List[float]]
 
-
 class GenerationResponse(BaseModel):
     code_response: Union[EmbeddingBatch, None]
     query_response: Union[EmbeddingBatch, None]

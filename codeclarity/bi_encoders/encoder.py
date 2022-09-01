@@ -25,15 +25,22 @@ class CodeEmbedder(object):
         self.config_path = Path(__file__).parent / "models" / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
 
-        self.model_type = [
-            config
-            for config in list(self.model_args.keys())
-            if base_model in list(self.model_args[config]["allowed_base_models"].keys())
-        ][0]
+        try:
+            self.model_type = [
+                config
+                for config in list(self.model_args.keys())
+                if base_model
+                in list(self.model_args[config]["allowed_base_models"].keys())
+            ][0]
+        except IndexError as e:
+            print(
+                f"{e}. This is likely caused by an incorrect base_model being passed to the class\
+            that is not allowed in the list of allowed models. Please verify the passed model is correct."
+            )
 
         self.embedder = self.embedding_models[self.model_type](base_model=base_model)
         self.allowed_languages = self.embedder.allowed_languages
-    
+
     def encode(
         self,
         code_samples: Union[str, List[str]],
@@ -80,9 +87,4 @@ class CodeEmbedder(object):
             return_tensors=return_tensors,
         )
 
-        return (
-            {
-                "input_strings": code_samples,
-                "embeddings": embeddings,
-            },
-        )
+        return ({"input_strings": code_samples, "embeddings": embeddings,},)

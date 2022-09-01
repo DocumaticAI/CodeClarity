@@ -14,8 +14,7 @@ from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
 sys.path.insert(
-    0,
-    str(Path(__file__).parents[2] / "utils"),
+    0, str(Path(__file__).parents[2] / "utils"),
 )
 
 from processing import UtilityHandler

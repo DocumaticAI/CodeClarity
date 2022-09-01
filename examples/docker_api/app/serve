@@ -56,6 +56,7 @@ def start_server():
 
     signal.signal(signal.SIGTERM, lambda a, b: sigterm_handler(nginx.pid, gunicorn.pid))
 
+    print("build correctly!")
     # If either subprocess exits, so do we.
     pids = set([nginx.pid, gunicorn.pid])
     while True:

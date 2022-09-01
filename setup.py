@@ -10,6 +10,4 @@ def get_version():
     return result.group(1)
 
 
-setup(
-    version=get_version(),
-)
+setup(version=get_version(),)

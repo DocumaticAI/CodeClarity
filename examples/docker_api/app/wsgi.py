@@ -4,4 +4,3 @@ import predictor as myapp
 # If you want to change the algorithm file, simply change "predictor" above to the
 # new file.
 app = myapp.app
-

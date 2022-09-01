@@ -9,15 +9,14 @@ import pytest
 import torch
 
 sys.path.insert(
-    0,
-    str(Path(__file__).parents[2] / "CodeClarity" / "bi-encoders"),
+    0, str(Path(__file__).parents[2] / "CodeClarity" / "bi-encoders"),
 )
 from codeclarity.bi_encoders.encoder import CodeEmbedder
 
 
 @pytest.fixture
 def embedding_model():
-    return CodeEmbedder(base_model="microsoft/codebert-base")
+    return CodeEmbedder(base_model="facebook/incoder-1B")
 
 
 def test_unixcoder_embedding(embedding_model):

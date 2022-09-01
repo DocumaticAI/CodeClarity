@@ -149,9 +149,7 @@ class InCoderEmbedder(AbstractTransformerEncoder):
                 low_cpu_mem_usage=True,
             )
         else:
-            kwargs = dict(
-                low_cpu_mem_usage=True,
-            )
+            kwargs = dict(low_cpu_mem_usage=True,)
         model = AutoModelForCausalLM.from_pretrained(self.base_model, **kwargs).half()
         print(
             "Search retrieval model for allowed_languages {} loaded correctly to device {} in {} seconds".format(

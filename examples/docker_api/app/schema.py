@@ -11,16 +11,11 @@ class ModelSchema(BaseModel):
     response_max_len: Optional[int] = 64
 
 
-class CodeBatch(BaseModel):
-    code_strings: Union[List[str], str]
-    code_embeddings: List[List[float]]
-
-
-class QueryBatch(BaseModel):
-    query_strings: Union[List[str], str]
-    query_embeddings: List[List[float]]
+class EmbeddingBatch(BaseModel):
+    input_strings: Union[List[str], str]
+    embeddings: List[List[float]]
 
 
 class GenerationResponse(BaseModel):
-    code_batch: CodeBatch
-    query_batch: QueryBatch
+    code_response: Union[EmbeddingBatch, None]
+    query_response: Union[EmbeddingBatch, None]

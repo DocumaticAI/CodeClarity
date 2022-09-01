@@ -44,23 +44,19 @@ async def transformation(payload: ModelSchema):
 
     Parameters
     ----------
-    payload - Pydantic.BaseClass:
+    payload - Pydantic.BaseModel:
         a validated json object containing source code and queries that embeddings need to be returned for
 
     Returns
     -------
-    predictions : dict:
+    GenerationResponse : Pydantic.BaseModel:
         a dictionary object with embeddings for all queries and code snippits that are parsed in the request
     """
     start = time.time()
     model = preloaded_models["embedding_handler"]
     if payload.language not in model.allowed_languages:
         response_msg = f"Language currently unsupported. Supported language types are {model.allowed_languages}, got {payload.language}"
-        return Response(
-            response_msg,
-            status_code=400,
-            media_type="plain/text",
-        )
+        return Response(response_msg, status_code=400, media_type="plain/text",)
 
     if payload.task == "embedding":
         if payload.code_snippit is not None:
@@ -70,21 +66,20 @@ async def transformation(payload: ModelSchema):
                 return_tensors="list",
             )
             print(
-                f"""response logged- num_samples:{len(payload.code_snippit)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {(time.time() - start) / len(payload.code_snippit)}"""
+                f"""response logged- num_samples:{len(payload.code_snippit)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {round((time.time() - start) / len(payload.code_snippit),2)}"""
             )
-        if payload.query is not None: 
+        if payload.query is not None:
             query_embeddings = model.encode(
-                code_samples=payload.query,
-                return_tensors="list",
+                code_samples=payload.query, return_tensors="list",
             )
             print(
-                f"""response logged- num_samples:{len(payload.query)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {(time.time() - start) / len(payload.query)}"""
+                f"""response logged- num_samples:{len(payload.query)},language_specified:{payload.language}, total_inference_time:{time.time() - start}, average_time_per_sample": {round((time.time() - start) / len(payload.query), 2)}"""
             )
         response_body = {
-            "code_response" : code_embeddings,
-            "query_response" : query_embeddings
+            "code_response": code_embeddings[0],
+            "query_response": query_embeddings[0],
         }
-        return Response(content=json.dumps(response_body), media_type="application/json")
+        return GenerationResponse(**response_body)
 
     else:
         return Response(

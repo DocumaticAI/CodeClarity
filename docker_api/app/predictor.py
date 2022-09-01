@@ -27,7 +27,7 @@ preloaded_models = {}
 def startup_event():
     print("downloading wrapped class for finetuned embedding models-")
     base_model = os.environ["base_model"]
-    preloaded_models["embedding_handler"] = CodeEmbedder(base_model)
+    preloaded_models["embedding_handler"] = CodeEmbedder(str(base_model))
     pass
 
 
@@ -97,7 +97,6 @@ async def transformation(payload: ModelSchema):
 
 
 app.include_router(controller)
-
 
 if __name__ == "__main__":
     uvicorn.run(app=app, port=8080)

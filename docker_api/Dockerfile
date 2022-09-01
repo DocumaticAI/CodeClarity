@@ -43,6 +43,9 @@ RUN conda install pytorch cudatoolkit=11.3 -c pytorch \
     && conda clean -ya
 
 
+ARG base_model
+ENV base_model $base_model
+
 COPY app /opt/program
 WORKDIR /opt/program
 

@@ -14,23 +14,22 @@ from predictor import app
 @pytest.fixture
 def payload():
     return {
-  "code_snippit": [
-    "string"
-  ],
-  "query": [
-    "string"
-  ],
-  "language": "python",
-  "task": "embedding",
-  "response_max_len": 64
-}
+        "code_snippit": ["string"],
+        "query": ["string"],
+        "language": "python",
+        "task": "embedding",
+        "response_max_len": 64,
+    }
+
 
 client = TestClient(app)
+
 
 def test_read_main():
     response = client.get("/ping")
     assert response.status_code == 200
 
+
 def test_api_unixcoder(payload):
-    ##TODO 
+    ##TODO
     pass

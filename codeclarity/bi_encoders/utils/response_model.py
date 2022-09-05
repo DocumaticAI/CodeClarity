@@ -4,6 +4,7 @@ import numpy as np
 from pydantic import BaseModel
 import torch
 
+
 class EmbeddingResponseModel(BaseModel):
     embeddings: Union[List[List[float]], List[np.ndarray], List[torch.Tensor]]
     input_strings: Union[List[str], str]

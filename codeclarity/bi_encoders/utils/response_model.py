@@ -1,8 +1,8 @@
 from typing import Any, List, Union
 
 import numpy as np
-from pydantic import BaseModel
 import torch
+from pydantic import BaseModel
 
 
 class EmbeddingResponseModel(BaseModel):

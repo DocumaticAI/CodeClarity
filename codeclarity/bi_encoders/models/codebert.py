@@ -60,6 +60,7 @@ class CodeBertEmbedder(AbstractTransformerEncoder):
             inference_embeddings = self.utility_handler.change_embedding_dtype(
                 model.forward(code_source_ids)[1], return_type=return_tensors
             )
+
         return inference_embeddings
 
     def tokenize(

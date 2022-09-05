@@ -127,16 +127,27 @@ class AbstractTransformerEncoder(ABC):
         with tqdm(
             total=len(string_batch), file=sys.stdout, disable=silence_progress_bar
         ) as pbar:
-            for batch in split_code_batch:
-                code_embeddings_list.extend(
-                    self.make_inference_minibatch(
-                        string_batch=batch,
-                        max_length_tokenizer=max_length_tokenizer,
-                        return_tensors=return_tensors,
-                    ),
-                )
-                torch.cuda.empty_cache()
-                pbar.update(batch_size)
+            if isinstance(self.device, torch.device("cuda")):  
+                with torch.amp.autocast(device_type=self.device, dtype=torch.float16):
+                    for batch in split_code_batch:
+                        code_embeddings_list.extend(
+                            self.make_inference_minibatch(
+                                string_batch=batch,
+                                max_length_tokenizer=max_length_tokenizer,
+                                return_tensors=return_tensors,
+                            ),
+                        )
+                        pbar.update(batch_size)
+            else: 
+                for batch in split_code_batch:
+                    code_embeddings_list.extend(
+                        self.make_inference_minibatch(
+                            string_batch=batch,
+                            max_length_tokenizer=max_length_tokenizer,
+                            return_tensors=return_tensors,
+                        ),
+                    )
+                    pbar.update(batch_size)    
 
             inference_embeddings = [
                 code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)

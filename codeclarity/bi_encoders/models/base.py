@@ -1,23 +1,19 @@
-import os
 import sys
-import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from posixpath import split
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 import yaml
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
 
 sys.path.insert(
-    0, str(Path(__file__).parents[2] / "utils"),
+    0, str(Path(__file__).parents[1] / "utils"),
 )
 
-from processing import UtilityHandler
+from utils.processing import UtilityHandler
 
 
 class AbstractTransformerEncoder(ABC):
@@ -35,6 +31,7 @@ class AbstractTransformerEncoder(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
+        self.amp_device = "cuda" if torch.cuda.is_available() else 'cpu'
         self.config_path = Path(__file__).parent / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
         self.utility_handler = UtilityHandler
@@ -84,6 +81,7 @@ class AbstractTransformerEncoder(ABC):
         string_batch: Union[list, str],
         max_length_tokenizer: int,
         batch_size: Optional[int] = 32,
+        silence_progress_bar: Any = False,
         return_tensors: Optional[str] = "torch",
     ) -> Union[List[torch.tensor], List[np.array], List[List[int]]]:
         """
@@ -112,6 +110,7 @@ class AbstractTransformerEncoder(ABC):
         """
 
         batch_size = self.serving_batch_size if batch_size is not None else batch_size
+
         if isinstance(string_batch, str) or not hasattr(string_batch, "__len__"):
             string_batch = [string_batch]
 
@@ -127,24 +126,26 @@ class AbstractTransformerEncoder(ABC):
             sentences_sorted, self.serving_batch_size
         )
 
-        with tqdm(total=len(string_batch), file=sys.stdout) as pbar:
-            for batch in split_code_batch:
-                code_embeddings_list.extend(
-                    self.make_inference_minibatch(
-                        string_batch=batch,
-                        max_length_tokenizer=max_length_tokenizer,
-                        return_tensors=return_tensors,
-                    ),
-                )
-                torch.cuda.empty_cache()
-                pbar.update(batch_size)
+        with tqdm(
+            total=len(string_batch), file=sys.stdout, disable=silence_progress_bar
+        ) as pbar:
+                with torch.amp.autocast(device_type=self.amp_device, dtype=torch.bfloat16):
+                    for batch in split_code_batch:
+                        code_embeddings_list.extend(
+                            self.make_inference_minibatch(
+                                string_batch=batch,
+                                max_length_tokenizer=max_length_tokenizer,
+                                return_tensors=return_tensors,
+                            ),
+                        )
+                        pbar.update(batch_size)
 
-            inference_embeddings = [
-                code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
-            ]
+        inference_embeddings = [
+            code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
+        ]
 
-            return (
-                inference_embeddings[0]
-                if len(inference_embeddings) == 0
-                else inference_embeddings
-            )
+        return (
+            inference_embeddings[0]
+            if len(inference_embeddings) == 0
+            else inference_embeddings
+        )

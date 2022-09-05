@@ -1,1 +1,1 @@
-from codeclarity.bi_encoders.encoder import CodeEmbedder
+# from codeclarity.bi_encoders.encoder import CodeEmbedder

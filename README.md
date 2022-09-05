@@ -37,6 +37,7 @@ First download a pretrained code model.
 
 ````python
 from codeclarity import CodeEmbedder
+
 model = CodeEmbedder(base_model = "microsoft/unixcoder-base")
 ````
 

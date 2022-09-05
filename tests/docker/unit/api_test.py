@@ -10,6 +10,7 @@ sys.path.insert(
 )
 from predictor import app
 
+
 @pytest.fixture
 def payload():
     return {

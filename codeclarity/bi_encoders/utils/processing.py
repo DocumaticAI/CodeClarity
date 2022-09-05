@@ -1,7 +1,5 @@
 import subprocess as sp
-from typing import List, Optional, Union
-
-import numpy as np
+from typing import List, Union
 import torch
 
 

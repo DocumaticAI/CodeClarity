@@ -1,12 +1,13 @@
 from email.mime import base
 from pathlib import Path
-from typing import List, Optional, Union
-
+from typing import List, Optional, Union, Any
 import numpy as np
 import pandas as pd
 import yaml
+import time 
 
-from codeclarity.bi_encoders.models import codebert, codet5, incoder, unixcoder
+from models import codebert, codet5, incoder, unixcoder
+from response_model import EmbeddingResponseModel
 
 
 class CodeEmbedder(object):
@@ -48,6 +49,8 @@ class CodeEmbedder(object):
         batch_size: Optional[int] = 32,
         max_length_tokenizer_nl: Optional[int] = 256,
         return_tensors: Optional[str] = "tensor",
+        silence_progress_bar : Any = False,
+        return_generation_metadata : Any = False
     ) -> dict:
         """
         Wrapping function for making inference on batches of source code or queries to embed them.
@@ -72,6 +75,7 @@ class CodeEmbedder(object):
             embeddings : List[List[float]]
                 a dense vector returned by the ML model
         """
+        start = time.time()
         if language:
             assert (
                 language in self.allowed_languages
@@ -83,8 +87,19 @@ class CodeEmbedder(object):
         embeddings = self.embedder.make_inference_batch(
             string_batch=code_samples,
             max_length_tokenizer=max_length_tokenizer_nl,
+            silence_progress_bar = silence_progress_bar,
             batch_size=batch_size,
             return_tensors=return_tensors,
-        )
-
-        return ({"input_strings": code_samples, "embeddings": embeddings,},)
+        )        
+        if return_generation_metadata: 
+            response = {
+                "embeddings" : embeddings,
+                "input_strings" : code_samples,
+                "embedding_time" : time.time() - start,
+                "batch_size" : batch_size,
+                "model_used" : self.base_model
+            }
+            print(response)
+            return EmbeddingResponseModel(**response)
+        else:
+            return embeddings

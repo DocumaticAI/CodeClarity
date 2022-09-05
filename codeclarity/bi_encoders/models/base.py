@@ -1,14 +1,10 @@
-import os
 import sys
-import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from posixpath import split
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 import yaml
 from tqdm import tqdm
 from transformers import RobertaConfig, RobertaModel, RobertaTokenizer
@@ -84,6 +80,7 @@ class AbstractTransformerEncoder(ABC):
         string_batch: Union[list, str],
         max_length_tokenizer: int,
         batch_size: Optional[int] = 32,
+        silence_progress_bar : Any = False,
         return_tensors: Optional[str] = "torch",
     ) -> Union[List[torch.tensor], List[np.array], List[List[int]]]:
         """
@@ -127,7 +124,7 @@ class AbstractTransformerEncoder(ABC):
             sentences_sorted, self.serving_batch_size
         )
 
-        with tqdm(total=len(string_batch), file=sys.stdout) as pbar:
+        with tqdm(total=len(string_batch), file=sys.stdout, disable= silence_progress_bar) as pbar:
             for batch in split_code_batch:
                 code_embeddings_list.extend(
                     self.make_inference_minibatch(
@@ -148,3 +145,4 @@ class AbstractTransformerEncoder(ABC):
                 if len(inference_embeddings) == 0
                 else inference_embeddings
             )
+            #return inference_embeddings

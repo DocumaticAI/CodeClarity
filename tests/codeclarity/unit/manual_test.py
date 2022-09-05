@@ -16,4 +16,5 @@ from encoder import CodeEmbedder
 if __name__ == "__main__":
     embedder = CodeEmbedder("microsoft/unixcoder-base")
 
-    x = embedder.encode("foo")
+    x = embedder.encode("foo", return_generation_metadata= True)
+    print(x)

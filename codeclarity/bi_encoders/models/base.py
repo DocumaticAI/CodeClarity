@@ -31,6 +31,7 @@ class AbstractTransformerEncoder(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
+        self.amp_device = "cuda" if torch.cuda.is_available() else 'cpu'
         self.config_path = Path(__file__).parent / "config.yaml"
         self.model_args = yaml.safe_load(self.config_path.read_text())
         self.utility_handler = UtilityHandler
@@ -109,6 +110,7 @@ class AbstractTransformerEncoder(ABC):
         """
 
         batch_size = self.serving_batch_size if batch_size is not None else batch_size
+
         if isinstance(string_batch, str) or not hasattr(string_batch, "__len__"):
             string_batch = [string_batch]
 
@@ -127,8 +129,7 @@ class AbstractTransformerEncoder(ABC):
         with tqdm(
             total=len(string_batch), file=sys.stdout, disable=silence_progress_bar
         ) as pbar:
-            if isinstance(self.device, torch.device("cuda")):  
-                with torch.amp.autocast(device_type=self.device, dtype=torch.float16):
+                with torch.amp.autocast(device_type=self.amp_device, dtype=torch.bfloat16):
                     for batch in split_code_batch:
                         code_embeddings_list.extend(
                             self.make_inference_minibatch(
@@ -138,24 +139,13 @@ class AbstractTransformerEncoder(ABC):
                             ),
                         )
                         pbar.update(batch_size)
-            else: 
-                for batch in split_code_batch:
-                    code_embeddings_list.extend(
-                        self.make_inference_minibatch(
-                            string_batch=batch,
-                            max_length_tokenizer=max_length_tokenizer,
-                            return_tensors=return_tensors,
-                        ),
-                    )
-                    pbar.update(batch_size)    
 
-            inference_embeddings = [
-                code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
-            ]
+        inference_embeddings = [
+            code_embeddings_list[idx] for idx in np.argsort(length_sorted_idx)
+        ]
 
-            return (
-                inference_embeddings[0]
-                if len(inference_embeddings) == 0
-                else inference_embeddings
-            )
-            # return inference_embeddings
+        return (
+            inference_embeddings[0]
+            if len(inference_embeddings) == 0
+            else inference_embeddings
+        )
